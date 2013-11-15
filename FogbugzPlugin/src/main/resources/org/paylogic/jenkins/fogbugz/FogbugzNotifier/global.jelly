@@ -1,0 +1,55 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <!--
+    This Jelly script is used to produce the global configuration option.
+
+    Jenkins uses a set of tag libraries to provide uniformity in forms.
+    To determine where this tag is defined, first check the namespace URI,
+    and then look under $JENKINS/views/. For example, <f:section> is defined
+    in $JENKINS/views/lib/form/section.jelly.
+
+    It's also often useful to just check other similar scripts to see what
+    tags they use. Views are always organized according to its owner class,
+    so it should be straightforward to find them.
+  -->
+  <f:section title="Fogbugz Plugin">
+    <f:entry title="URL" field="url"
+          description="URL to the Fogbugz instance (eg: http://fb.awesome.lan/fogbugz/). Expects the asp version of Fogbugz (7+).">
+      <f:textbox />
+    </f:entry>
+	
+	<f:entry title="API Token" field="token"
+            description="API token to use for the Fogbugz API. You will need to login yourself.">
+		<f:textbox />
+	</f:entry>
+
+	<f:entry title="Feature branch fieldname" field="featureBranchFieldname"
+            description="Internal name of feature branch field. Eg: plugin_customfields_at_fogcreek_com_sourcexbranchd22">
+        <f:textbox />
+	</f:entry>
+
+	<f:entry title="Original branch fieldname" field="originalBranchFieldname"
+            description="Internal name of original branch field. Eg: plugin_customfields_at_fogcreek_com_targetxbranchc73">
+	    <f:textbox />
+	</f:entry>
+
+	<f:entry title="Target branch fieldname" field="targetBranchFieldname"
+            description="Internal name of target branch field. Eg: plugin_customfields_at_fogcreek_com_targetxbranchg01b">
+	    <f:textbox />
+	</f:entry>
+
+	<f:entry title="ID of mergekeeper user" field="mergekeeperUserId"
+	        description="Eg: 225. Defaults to 1 if left empty">
+	    <f:textbox />
+	</f:entry>
+
+	<f:entry title="Template for reporting failed builds" field="failedBuildTemplate"
+	        description="This template will be parsed by mustache and then be sent to fogbugz as comment on case edit.">
+	    <f:textarea />
+	</f:entry>
+
+	<f:entry title="Template for reporting successful builds" field="successfulBuildTemplate"
+	        description="This template will be parsed by mustache and then be sent to fogbugz as comment on case edit.">
+	    <f:textarea />
+	</f:entry>
+  </f:section>
+</j:jelly>
