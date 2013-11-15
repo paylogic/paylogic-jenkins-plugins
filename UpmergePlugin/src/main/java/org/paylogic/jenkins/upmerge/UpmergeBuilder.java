@@ -1,6 +1,9 @@
-package org.paylogic.UpmergePlugin;
+package org.paylogic.jenkins.upmerge;
 import hudson.Launcher;
 import hudson.Extension;
+import hudson.Plugin;
+import hudson.PluginWrapper;
+import hudson.model.Hudson;
 import hudson.util.FormValidation;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -21,7 +24,7 @@ import java.io.IOException;
  * <p>
  * When the user configures the project and enables this builder,
  * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked
- * and a new {@link HelloWorldBuilder} is created. The created
+ * and a new {@link UpmergeBuilder} is created. The created
  * instance is persisted to the project configuration XML by using
  * XStream, so this allows you to use instance fields (like {@link #name})
  * to remember the configuration.
@@ -32,13 +35,13 @@ import java.io.IOException;
  *
  * @author Kohsuke Kawaguchi
  */
-public class HelloWorldBuilder extends Builder {
+public class UpmergeBuilder extends Builder {
 
     private final String name;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public HelloWorldBuilder(String name) {
+    public UpmergeBuilder(String name) {
         this.name = name;
     }
 
@@ -60,22 +63,38 @@ public class HelloWorldBuilder extends Builder {
         else
             listener.getLogger().println("Hello, "+name+"!");
         return true;
+
+        /**
+         * Here we should do upmerging. Luckily, we can access the command line,
+         * and run stuff from there (on the agents even!).
+         *
+         * So:
+         * - Fetch case info using branch name.
+         * - Create 'ReleaseBranch' object from case info and a nextBranch object which is releasebranch.copy().next();
+         * - Initiate UpMerge sequence....
+         *   - Try to pull new code from nextBranch.getNext();
+         *   - Try to merge this new code with releaseBranch();
+         *   - Commit this shiny new code.
+         *   - Set a flag somewhere, indicating that this upmerge has been done.
+         *   - Repeat UpMerge sequence for next releases until there are no moar releases.
+         * - In some post-build thingy, push these new branches if all went well.
+         * - We SHOULD not have to do any cleanup actions, because workspace is force-cleared every build.
+         * - Rely on the FogbugzPlugin (dependency, see pom.xml) to do reporting of our upmerges.
+         * - Trigger new builds on all branches that have been merged.
+         *
+         */
     }
 
-    // Overridden for better type safety.
-    // If your plugin doesn't really define any property on Descriptor,
-    // you don't have to do this.
-    @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl)super.getDescriptor();
     }
 
     /**
-     * Descriptor for {@link HelloWorldBuilder}. Used as a singleton.
+     * Descriptor for {@link UpmergeBuilder}. Used as a singleton.
      * The class is marked as public so that it can be accessed from views.
      *
      * <p>
-     * See <tt>src/main/resources/hudson/plugins/hello_world/HelloWorldBuilder/*.jelly</tt>
+     * See <tt>src/main/resources/hudson/plugins/hello_world/UpmergeBuilder/*.jelly</tt>
      * for the actual HTML fragment for the configuration screen.
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
@@ -93,7 +112,12 @@ public class HelloWorldBuilder extends Builder {
          * In order to load the persisted global configuration, you have to 
          * call load() in the constructor.
          */
-        public DescriptorImpl() {
+        public DescriptorImpl() throws Exception {
+            super();
+            Plugin requiredPlugin = Hudson.getInstance().getPlugin("FogbugzPlugin");
+            if (requiredPlugin == null) {
+                throw new Exception("You need the 'FogbugzPlugin' installed in order to use 'UpmergePlugin'");
+            }
             load();
         }
 
@@ -123,7 +147,7 @@ public class HelloWorldBuilder extends Builder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Say hello world";
+            return "Does upmerging 'n stuff";
         }
 
         @Override
@@ -148,4 +172,3 @@ public class HelloWorldBuilder extends Builder {
         }
     }
 }
-

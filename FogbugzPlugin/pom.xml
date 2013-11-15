@@ -8,7 +8,7 @@
 
     <groupId>org.paylogic</groupId>
     <artifactId>FogbugzPlugin</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
     <packaging>hpi</packaging>
     <build>
         <plugins>
@@ -29,13 +29,13 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.12.2</version>
-            <scope>compiled</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.samskivert</groupId>
             <artifactId>jmustache</artifactId>
             <version>1.8</version>
-            <scope>compiled</scope>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

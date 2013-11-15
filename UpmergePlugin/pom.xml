@@ -11,6 +11,17 @@
   <version>0.1</version>
   <packaging>hpi</packaging>
 
+  <dependencies>
+      <dependency>
+          <groupId>org.paylogic</groupId>
+          <artifactId>FogbugzPlugin</artifactId>
+          <version>0.2</version>
+          <scope>system</scope>
+          <systemPath>/home/maikel/jenkinsplugins/FogbugzPlugin/target/FogbugzPlugin.jar</systemPath>
+      </dependency>
+
+  </dependencies>
+
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
