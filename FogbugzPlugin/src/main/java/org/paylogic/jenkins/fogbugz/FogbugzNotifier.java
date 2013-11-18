@@ -77,7 +77,7 @@ public class FogbugzNotifier extends Notifier {
         String[] command = {"hg", "branch"};
         String output = "";
         try {
-            output = executor.runCommand(command);
+            output = executor.runCommandClean(command);
         } catch (Exception e) {
             log.log(Level.INFO, "Exception while running command 'hg branch'", e);
         }

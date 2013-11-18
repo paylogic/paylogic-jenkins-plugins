@@ -17,12 +17,15 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
+import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
+import org.paylogic.jenkins.advancedmercurial.MercurialBranch;
 import org.paylogic.jenkins.executionhelper.ExecutionHelper;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -82,7 +85,6 @@ public class UpmergeBuilder extends Builder {
         // this is just a test :)
         FogbugzCase fbCase = caseManager.getCaseById(3);
 
-        MercurialSCM repository = (MercurialSCM) build.getProject().getScm();
         try {
             String branchName = executor.runCommand("hg branch");
         } catch (Exception e) {
@@ -90,24 +92,15 @@ public class UpmergeBuilder extends Builder {
             return false;
         }
 
-        String hgExePath = repository.getDescriptor().getHgExe();
-
-        String branches = "";
-        try {
-            branches = executor.runCommand("hg branches");
-            log.info(branches);
-            l.println("Available branches");
-            l.print(branches);
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Hmm exception...", e);
-        }
+        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
+        l.print(AdvancedMercurialManager.prettyPrintBranchlist(amm.getBranches()));
 
         return true;
 
         /**
          * Here we should do upmerging. Luckily, we can access the command line,
          * and run stuff from there (on the agents even!). Better to use the mercurial plugin though.
-         * (edit: this seems to be not possible :| ).
+         * (edit: this seems to be not possible :| , so lets create our own one!).
          *
          * So:
          * - Fetch case info using branch name.
