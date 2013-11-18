@@ -2,8 +2,6 @@ package org.paylogic.jenkins.upmerge;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.Plugin;
-import hudson.PluginWrapper;
-import hudson.model.Hudson;
 import hudson.util.FormValidation;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -15,6 +13,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
+import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 
@@ -65,11 +64,18 @@ public class UpmergeBuilder extends Builder {
             listener.getLogger().println("Bonjour, "+name+"!");
         else
             listener.getLogger().println("Hello, "+name+"!");
+
+        FogbugzCaseManager caseManager = new FogbugzNotifier().getFogbugzCaseManager();
+        // this is just a test :)
+        FogbugzCase fbCase = caseManager.getCaseById(3);
+
+        listener.getLogger().println(fbCase.getTitle());
+
         return true;
 
         /**
          * Here we should do upmerging. Luckily, we can access the command line,
-         * and run stuff from there (on the agents even!).
+         * and run stuff from there (on the agents even!). Better to use the mercurial plugin though.
          *
          * So:
          * - Fetch case info using branch name.
@@ -120,10 +126,6 @@ public class UpmergeBuilder extends Builder {
             Plugin requiredPlugin = Jenkins.getInstance().getPlugin("FogbugzPlugin");
             if (requiredPlugin == null) {
                 throw new Exception("You need the 'FogbugzPlugin' installed in order to use 'UpmergePlugin'");
-            } else {
-                FogbugzCaseManager caseManager = new FogbugzNotifier().getFogbugzCaseManager();
-                // this is just a test :)
-                caseManager.getCaseById(3);
             }
             load();
         }

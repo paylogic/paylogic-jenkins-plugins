@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.509.4</version><!-- which version of Jenkins is this plugin built against? -->
+        <version>1.540</version><!-- which version of Jenkins is this plugin built against? -->
     </parent>
 
     <groupId>org.paylogic</groupId>
@@ -29,8 +29,7 @@
             <groupId>org.paylogic</groupId>
             <artifactId>Fogbugz</artifactId>
             <version>1.0</version>
-            <scope>system </scope>
-            <systemPath>/home/maikel/jenkinsplugins/Fogbugz/target/Fogbugz-1.0.jar</systemPath>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -51,19 +50,19 @@
         </dependency>
     </dependencies>
 
-    <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
-    <repositories>
-        <repository>
-            <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
-        </repository>
-    </repositories>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
-        </pluginRepository>
-    </pluginRepositories>
+    <distributionManagement>
+        <repository>
+            <id>laptop</id>
+            <name>laptop</name>
+            <url>http://delll:8080/archiva/repository/internal/</url>
+        </repository>
+        <!--<snapshotRepository>
+            <uniqueVersion>false</uniqueVersion>
+            <id>local</id>
+            <name>local</name>
+            <url>http://delll:8080/archiva/repository/snapshots/</url>
+        </snapshotRepository>-->
+    </distributionManagement>
 
 </project>
