@@ -14,6 +14,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
+import org.paylogic.jenkins.executionhelper.ExecutionHelper;
 
 import java.io.*;
 import java.util.HashMap;
@@ -71,17 +72,16 @@ public class FogbugzNotifier extends Notifier {
         SCM scm = build.getProject().getScm();
         log.info("SCM type: " + scm.getType());
 
-        OutputStream os = new ByteArrayOutputStream();
+        ExecutionHelper executor = new ExecutionHelper(build, launcher);
+
         String[] command = {"hg", "branch"};
+        String output = "";
         try {
-            launcher.launchChannel(command, os, build.getWorkspace(), build.getEnvVars());
-        } catch (EOFException e) {
-            log.info("End of output stream from hg branch command reached.");
+            output = executor.runCommand(command);
         } catch (Exception e) {
             log.log(Level.INFO, "Exception while running command 'hg branch'", e);
         }
 
-        String output = os.toString().replaceAll("\\s","");
         log.info("Response from command: " + output);
 
         if (output.matches(FEATURE_BRANCH_REGEX) || output.startsWith("c")) {

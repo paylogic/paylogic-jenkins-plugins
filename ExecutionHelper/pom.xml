@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.paylogic</groupId>
+    <artifactId>ExecutionHelper</artifactId>
+    <version>1.2</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.jenkins-ci.main</groupId>
+            <artifactId>jenkins-core</artifactId>
+            <version>1.540</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.12.2</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>laptop</id>
+            <name>laptop</name>
+            <url>http://delll:8080/archiva/repository/internal/</url>
+        </repository>
+        <!--<snapshotRepository>
+            <uniqueVersion>false</uniqueVersion>
+            <id>local</id>
+            <name>local</name>
+            <url>http://delll:8080/archiva/repository/snapshots/</url>
+        </snapshotRepository>-->
+    </distributionManagement>
+</project>

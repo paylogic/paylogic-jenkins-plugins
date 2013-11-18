@@ -1,30 +1,19 @@
-package org.paylogic.jenkins.upmerge;
+package org.paylogic.GatekeeperPlugin;
 import hudson.Launcher;
 import hudson.Extension;
-import hudson.Plugin;
-import hudson.plugins.mercurial.MercurialSCM;
 import hudson.util.FormValidation;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
-import jenkins.model.Jenkins;
-import lombok.extern.java.Log;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
-import org.paylogic.fogbugz.FogbugzCase;
-import org.paylogic.fogbugz.FogbugzCaseManager;
-import org.paylogic.jenkins.executionhelper.ExecutionHelper;
-import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Map;
-import java.util.logging.Level;
 
 /**
  * Sample {@link Builder}.
@@ -32,7 +21,7 @@ import java.util.logging.Level;
  * <p>
  * When the user configures the project and enables this builder,
  * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked
- * and a new {@link UpmergeBuilder} is created. The created
+ * and a new {@link HelloWorldBuilder} is created. The created
  * instance is persisted to the project configuration XML by using
  * XStream, so this allows you to use instance fields (like {@link #name})
  * to remember the configuration.
@@ -43,14 +32,13 @@ import java.util.logging.Level;
  *
  * @author Kohsuke Kawaguchi
  */
-@Log
-public class UpmergeBuilder extends Builder {
+public class HelloWorldBuilder extends Builder {
 
     private final String name;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public UpmergeBuilder(String name) {
+    public HelloWorldBuilder(String name) {
         this.name = name;
     }
 
@@ -67,73 +55,27 @@ public class UpmergeBuilder extends Builder {
         // Since this is a dummy, we just say 'hello world' and call that a build.
 
         // This also shows how you can consult the global configuration of the builder
-        PrintStream l = listener.getLogger();
-
         if (getDescriptor().getUseFrench())
-            l.println("Bonjour, "+name+"!");
+            listener.getLogger().println("Bonjour, "+name+"!");
         else
-            l.println("Hello, "+name+"!");
-
-        ExecutionHelper executor = new ExecutionHelper(build, launcher);
-
-        Map buildVariables = build.getBuildVariables();
-
-        FogbugzCaseManager caseManager = new FogbugzNotifier().getFogbugzCaseManager();
-        // this is just a test :)
-        FogbugzCase fbCase = caseManager.getCaseById(3);
-
-        MercurialSCM repository = (MercurialSCM) build.getProject().getScm();
-        String branchName = repository.getBranch();
-        if (branchName.startsWith("$")) {
-            branchName = buildVariables.get(branchName).toString();
-        }
-
-        String hgExePath = repository.getDescriptor().getHgExe();
-
-        String branches = "";
-        try {
-            branches = executor.runCommand("hg branches");
-            log.info(branches);
-            l.println("Available branches");
-            l.print(branches);
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Hmm exception...", e);
-        }
-
+            listener.getLogger().println("Hello, "+name+"!");
         return true;
-
-        /**
-         * Here we should do upmerging. Luckily, we can access the command line,
-         * and run stuff from there (on the agents even!). Better to use the mercurial plugin though.
-         * (edit: this seems to be not possible :| ).
-         *
-         * So:
-         * - Fetch case info using branch name.
-         * - Create 'ReleaseBranch' object from case info and a nextBranch object which is releasebranch.copy().next();
-         * - Initiate UpMerge sequence....
-         *   - Try to pull new code from nextBranch.getNext();
-         *   - Try to merge this new code with releaseBranch();
-         *   - Commit this shiny new code.
-         *   - Set a flag somewhere, indicating that this upmerge has been done.
-         *   - Repeat UpMerge sequence for next releases until there are no moar releases.
-         * - In some post-build thingy, push these new branches if all went well.
-         * - We SHOULD not have to do any cleanup actions, because workspace is force-cleared every build.
-         * - Rely on the FogbugzPlugin (dependency, see pom.xml) to do reporting of our upmerges.
-         * - Trigger new builds on all branches that have been merged.
-         *
-         */
     }
 
+    // Overridden for better type safety.
+    // If your plugin doesn't really define any property on Descriptor,
+    // you don't have to do this.
+    @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl)super.getDescriptor();
     }
 
     /**
-     * Descriptor for {@link UpmergeBuilder}. Used as a singleton.
+     * Descriptor for {@link HelloWorldBuilder}. Used as a singleton.
      * The class is marked as public so that it can be accessed from views.
      *
      * <p>
-     * See <tt>src/main/resources/hudson/plugins/hello_world/UpmergeBuilder/*.jelly</tt>
+     * See <tt>src/main/resources/hudson/plugins/hello_world/HelloWorldBuilder/*.jelly</tt>
      * for the actual HTML fragment for the configuration screen.
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
@@ -151,19 +93,7 @@ public class UpmergeBuilder extends Builder {
          * In order to load the persisted global configuration, you have to 
          * call load() in the constructor.
          */
-        public DescriptorImpl() throws Exception {
-            super();
-
-            Plugin fbPlugin = Jenkins.getInstance().getPlugin("FogbugzPlugin");
-            if (fbPlugin == null) {
-                throw new Exception("You need the 'FogbugzPlugin' installed in order to use 'UpmergePlugin'");
-            }
-
-            Plugin hgPlugin = Jenkins.getInstance().getPlugin("mercurial");
-            if (hgPlugin == null) {
-                throw new Exception("You need the 'mercurial' plugin installed in order to use 'UpmergePlugin'");
-            }
-
+        public DescriptorImpl() {
             load();
         }
 
@@ -193,7 +123,7 @@ public class UpmergeBuilder extends Builder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Does upmerging 'n stuff";
+            return "Say hello world";
         }
 
         @Override
@@ -218,3 +148,4 @@ public class UpmergeBuilder extends Builder {
         }
     }
 }
+

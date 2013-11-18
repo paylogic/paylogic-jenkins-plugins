@@ -48,6 +48,11 @@
             <artifactId>mercurial</artifactId>
             <version>1.49</version>
         </dependency>
+        <dependency>
+            <groupId>org.paylogic</groupId>
+            <artifactId>ExecutionHelper</artifactId>
+            <version>1.2</version>
+        </dependency>
     </dependencies>
 
 
