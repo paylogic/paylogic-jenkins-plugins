@@ -67,10 +67,10 @@ public class FogbugzCaseManager {
                     output += "&" + key + "=" + URLEncoder.encode(value, "UTF-8");
                 }
             } catch (UnsupportedEncodingException e) {
-                log.info("Unsupported Encoding Exception, why?");
+                FogbugzCaseManager.log.info("Unsupported Encoding Exception, why?");
             }
         }
-        log.info("Generated URL to send to Fogbugz: " + output);
+        FogbugzCaseManager.log.info("Generated URL to send to Fogbugz: " + output);
         return output;
     }
 
@@ -116,7 +116,7 @@ public class FogbugzCaseManager {
             );
 
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Exception while fetching case " + Integer.toString(id), e);
+            FogbugzCaseManager.log.log(Level.SEVERE, "Exception while fetching case " + Integer.toString(id), e);
         }
         return null;
     }
@@ -143,11 +143,11 @@ public class FogbugzCaseManager {
             URL uri = new URL(this.mapToFogbugzUrl(params));
             HttpURLConnection con = (HttpURLConnection) uri.openConnection();
             String result = con.getInputStream().toString();
-            log.info("Fogbugz response got when saving case: " + result);
+            FogbugzCaseManager.log.info("Fogbugz response got when saving case: " + result);
             return true;
 
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Exception while saving case " + Integer.toString(fbCase.getId()), e);
+            FogbugzCaseManager.log.log(Level.SEVERE, "Exception while saving case " + Integer.toString(fbCase.getId()), e);
         }
         return false;
     }

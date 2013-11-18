@@ -14,10 +14,28 @@
   <dependencies>
       <dependency>
           <groupId>org.paylogic</groupId>
+          <artifactId>Fogbugz</artifactId>
+          <version>1.0</version>
+          <scope>system </scope>
+          <systemPath>/home/maikel/jenkinsplugins/Fogbugz/target/Fogbugz-1.0.jar</systemPath>
+      </dependency>
+      <dependency>
+          <groupId>org.paylogic</groupId>
           <artifactId>FogbugzPlugin</artifactId>
-          <version>0.2</version>
+          <version>0.2.1</version>
           <scope>system</scope>
           <systemPath>/home/maikel/jenkinsplugins/FogbugzPlugin/target/FogbugzPlugin.jar</systemPath>
+      </dependency>
+      <dependency>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok</artifactId>
+          <version>1.12.2</version>
+          <scope>compile</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>mercurial</artifactId>
+          <version>1.49</version>
       </dependency>
 
   </dependencies>
@@ -36,5 +54,26 @@
       <url>http://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
+
+    <build>
+    <plugins>
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+            <execution>
+                <id>copy-dependencies</id>
+                <phase>package</phase>
+                <goals>
+                    <goal>copy-dependencies</goal>
+                </goals>
+                <configuration>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                    <overWriteReleases>false</overWriteReleases>
+                    <overWriteSnapshots>true</overWriteSnapshots>
+                </configuration>
+            </execution>
+        </executions>
+    </plugin></plugins></build>
 
 </project>

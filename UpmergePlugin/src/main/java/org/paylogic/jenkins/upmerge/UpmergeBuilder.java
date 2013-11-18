@@ -10,10 +10,13 @@ import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
+import org.paylogic.fogbugz.FogbugzCaseManager;
+import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -114,9 +117,13 @@ public class UpmergeBuilder extends Builder {
          */
         public DescriptorImpl() throws Exception {
             super();
-            Plugin requiredPlugin = Hudson.getInstance().getPlugin("FogbugzPlugin");
+            Plugin requiredPlugin = Jenkins.getInstance().getPlugin("FogbugzPlugin");
             if (requiredPlugin == null) {
                 throw new Exception("You need the 'FogbugzPlugin' installed in order to use 'UpmergePlugin'");
+            } else {
+                FogbugzCaseManager caseManager = new FogbugzNotifier().getFogbugzCaseManager();
+                // this is just a test :)
+                caseManager.getCaseById(3);
             }
             load();
         }

@@ -8,7 +8,7 @@
 
     <groupId>org.paylogic</groupId>
     <artifactId>FogbugzPlugin</artifactId>
-    <version>0.2</version>
+    <version>0.2.1</version>
     <packaging>hpi</packaging>
     <build>
         <plugins>
@@ -26,6 +26,13 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.paylogic</groupId>
+            <artifactId>Fogbugz</artifactId>
+            <version>1.0</version>
+            <scope>system </scope>
+            <systemPath>/home/maikel/jenkinsplugins/Fogbugz/target/Fogbugz-1.0.jar</systemPath>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.12.2</version>
@@ -36,6 +43,11 @@
             <artifactId>jmustache</artifactId>
             <version>1.8</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>mercurial</artifactId>
+            <version>1.49</version>
         </dependency>
     </dependencies>
 

@@ -4,10 +4,7 @@ import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Result;
+import hudson.model.*;
 import hudson.scm.SCM;
 import hudson.tasks.*;
 import lombok.Getter;
@@ -130,7 +127,7 @@ public class FogbugzNotifier extends Notifier {
 
 
     @Extension
-    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+    public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         @Getter private String url;
         @Getter private String token;
