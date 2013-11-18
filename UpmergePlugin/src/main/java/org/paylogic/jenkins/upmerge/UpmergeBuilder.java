@@ -83,9 +83,11 @@ public class UpmergeBuilder extends Builder {
         FogbugzCase fbCase = caseManager.getCaseById(3);
 
         MercurialSCM repository = (MercurialSCM) build.getProject().getScm();
-        String branchName = repository.getBranch();
-        if (branchName.startsWith("$")) {
-            branchName = buildVariables.get(branchName).toString();
+        try {
+            String branchName = executor.runCommand("hg branch");
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "ERRRUR", e);
+            return false;
         }
 
         String hgExePath = repository.getDescriptor().getHgExe();

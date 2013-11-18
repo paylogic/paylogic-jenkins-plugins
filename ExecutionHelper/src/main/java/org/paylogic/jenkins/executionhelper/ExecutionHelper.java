@@ -28,14 +28,28 @@ public class ExecutionHelper {
             log.info("End of file reached, command is done.");
         }
 
-        String output = os.toString().replaceAll("\\s", "");
+        String output = os.toString();
         log.info("Response from command is: " + output);
 
         return output;
     }
 
-    public String runCommand(String command) throws Exception {
+    public String runCommand(String command) throws IOException, InterruptedException {
         String[] splittedCommand = command.split(" ");
         return this.runCommand(splittedCommand);
+    }
+
+    public String runCommandClean(String[] command) throws IOException, InterruptedException {
+        String output = this.runCommand(command);
+        return this.clean(output);
+    }
+
+    public String runCommandClean(String command) throws IOException, InterruptedException {
+        String output = this.runCommand(command);
+        return this.clean(output);
+    }
+
+    private String clean(String input) {
+        return input.toString().replaceAll("\\s", "");
     }
 }
