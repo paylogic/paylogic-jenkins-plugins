@@ -9,6 +9,7 @@ Plugins do the following:
 
 - Fogbugz: a Java interface to the Fogbugz 7 XML API.
 - FogbugzPlugin: a Jenkins plugin that reports build status to Fogbugz using 'Fogbugz'
+- AdvancedMercurialManager: a Java class that executes update, commit and merge commands for Mercurial. Parses output of that as well.
 - ExecutionHelper: a Java class that does some boilerplate code for running abritrary commands on workers in Jenkins.
 - GatekeeperPlugin: a Jenkins plugin that merges a feature branch to a release branch (meant to run before tests).
 - UpmergePlugin: a Jenkins plugin that merges current release branch to next release branch until there are no further releases available.
