@@ -1,19 +1,25 @@
-package org.paylogic.GatekeeperPlugin;
+package org.paylogic.jenkins.gatekeeper;
+import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.Extension;
+import hudson.Util;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.util.FormValidation;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
+import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.io.PrintStream;
 
 /**
  * Sample {@link Builder}.
@@ -21,7 +27,7 @@ import java.io.IOException;
  * <p>
  * When the user configures the project and enables this builder,
  * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked
- * and a new {@link HelloWorldBuilder} is created. The created
+ * and a new {@link GatekeeperPlugin} is created. The created
  * instance is persisted to the project configuration XML by using
  * XStream, so this allows you to use instance fields (like {@link #name})
  * to remember the configuration.
@@ -32,13 +38,13 @@ import java.io.IOException;
  *
  * @author Kohsuke Kawaguchi
  */
-public class HelloWorldBuilder extends Builder {
+public class GatekeeperPlugin extends Builder {
 
     private final String name;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public HelloWorldBuilder(String name) {
+    public GatekeeperPlugin(String name) {
         this.name = name;
     }
 
@@ -50,15 +56,23 @@ public class HelloWorldBuilder extends Builder {
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         // This is where you 'build' the project.
         // Since this is a dummy, we just say 'hello world' and call that a build.
+        PrintStream l = listener.getLogger();
 
-        // This also shows how you can consult the global configuration of the builder
-        if (getDescriptor().getUseFrench())
-            listener.getLogger().println("Bonjour, "+name+"!");
-        else
-            listener.getLogger().println("Hello, "+name+"!");
+        EnvVars envVars = build.getEnvironment(listener);
+        EnvironmentVariablesNodeProperty globalProperties = Jenkins.getInstance().getGlobalNodeProperties().get(EnvironmentVariablesNodeProperty.class);
+        envVars.putAll(globalProperties.getEnvVars());
+
+        String givenNodeId = Util.replaceMacro("$NODE_ID", envVars);
+        l.println("Resolved node id: "+ givenNodeId);
+
+
+
+        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
+
+
         return true;
     }
 
@@ -71,11 +85,11 @@ public class HelloWorldBuilder extends Builder {
     }
 
     /**
-     * Descriptor for {@link HelloWorldBuilder}. Used as a singleton.
+     * Descriptor for {@link GatekeeperPlugin}. Used as a singleton.
      * The class is marked as public so that it can be accessed from views.
      *
      * <p>
-     * See <tt>src/main/resources/hudson/plugins/hello_world/HelloWorldBuilder/*.jelly</tt>
+     * See <tt>src/main/resources/hudson/plugins/hello_world/GatekeeperPlugin/*.jelly</tt>
      * for the actual HTML fragment for the configuration screen.
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.

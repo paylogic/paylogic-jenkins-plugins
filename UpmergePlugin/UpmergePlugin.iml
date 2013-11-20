@@ -7,13 +7,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/target/generated-sources/localizer" isTestSource="false" />
-      <excludeFolder url="file://$MODULE_DIR$/target/UpmergePlugin" />
       <excludeFolder url="file://$MODULE_DIR$/target/classes" />
       <excludeFolder url="file://$MODULE_DIR$/target/generated-sources/groovy-stubs" />
-      <excludeFolder url="file://$MODULE_DIR$/target/inject-tests" />
-      <excludeFolder url="file://$MODULE_DIR$/target/jenkins-for-test" />
-      <excludeFolder url="file://$MODULE_DIR$/target/surefire-reports" />
-      <excludeFolder url="file://$MODULE_DIR$/target/test-classes" />
       <excludeFolder url="file://$MODULE_DIR$/target/work" />
     </content>
     <orderEntry type="inheritedJdk" />
@@ -144,6 +139,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.kohsuke:access-modifier-annotation:1.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.kohsuke:owasp-html-sanitizer:r88" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.mindrot:jbcrypt:0.3m" level="project" />
+    <orderEntry type="library" name="Maven: org.paylogic:AdvancedMercurial:1.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.jenkins-ci.main:jenkins-war:war:1.540" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.jenkins-ci.main:jenkins-test-harness:1.540" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.jenkins-ci.main:jenkins-war:war-for-test:1.540" level="project" />

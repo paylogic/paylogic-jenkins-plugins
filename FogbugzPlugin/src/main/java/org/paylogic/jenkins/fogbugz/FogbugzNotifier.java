@@ -16,7 +16,6 @@ import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.executionhelper.ExecutionHelper;
 
-import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;

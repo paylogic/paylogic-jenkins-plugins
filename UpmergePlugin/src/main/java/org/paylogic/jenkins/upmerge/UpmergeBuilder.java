@@ -2,7 +2,6 @@ package org.paylogic.jenkins.upmerge;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.Plugin;
-import hudson.plugins.mercurial.MercurialSCM;
 import hudson.util.FormValidation;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -18,7 +17,6 @@ import org.kohsuke.stapler.QueryParameter;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
-import org.paylogic.jenkins.advancedmercurial.MercurialBranch;
 import org.paylogic.jenkins.executionhelper.ExecutionHelper;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 
