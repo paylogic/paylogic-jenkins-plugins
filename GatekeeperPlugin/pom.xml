@@ -8,7 +8,7 @@
 
   <groupId>org.paylogic</groupId>
   <artifactId>GatekeeperPlugin</artifactId>
-  <version>1.0</version>
+  <version>1.0.2</version>
   <packaging>hpi</packaging>
 
     <dependencies>
@@ -33,4 +33,19 @@
             <version>1.0.1</version>
         </dependency>
     </dependencies>
+
+
+       <distributionManagement>
+        <repository>
+            <id>laptop</id>
+            <name>laptop</name>
+            <url>http://delll:8080/archiva/repository/internal/</url>
+        </repository>
+        <!--<snapshotRepository>
+            <uniqueVersion>false</uniqueVersion>
+            <id>local</id>
+            <name>local</name>
+            <url>http://delll:8080/archiva/repository/snapshots/</url>
+        </snapshotRepository>-->
+    </distributionManagement>
 </project>

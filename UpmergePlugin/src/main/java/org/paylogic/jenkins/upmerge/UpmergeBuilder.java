@@ -2,6 +2,7 @@ package org.paylogic.jenkins.upmerge;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.Plugin;
+import hudson.model.Result;
 import hudson.util.FormValidation;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -17,12 +18,17 @@ import org.kohsuke.stapler.QueryParameter;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
+import org.paylogic.jenkins.advancedmercurial.MercurialBranch;
 import org.paylogic.jenkins.executionhelper.ExecutionHelper;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
+import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranch;
+import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranchImpl;
+import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranchInvalidException;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -66,9 +72,32 @@ public class UpmergeBuilder extends Builder {
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
         // This is where you 'build' the project.
         // Since this is a dummy, we just say 'hello world' and call that a build.
+        if (build.getResult() != Result.SUCCESS) {
+            log.info("Not running build due to no successful tests.");
+            return false;
+        }
 
         // This also shows how you can consult the global configuration of the builder
         PrintStream l = listener.getLogger();
+
+        // Get the ReleaseBranch implementation
+        Class<?> releaseBranchImpl = null;
+        for (ReleaseBranch r: ReleaseBranch.all()) {
+            // Loop trough the classes, assign one if found in list.
+            // If more than one exists, our supplied implementation has less priority.
+            if (releaseBranchImpl == null) {
+                releaseBranchImpl = r.getClass();
+                break;
+            }
+        }
+
+        if (releaseBranchImpl == null) {
+            log.info("NO RELAESE BRANCH IMPLEMENTATION FOUDN! DEFAULTING TO BUILTIN");
+            releaseBranchImpl = ReleaseBranchImpl.class;
+        }
+
+        // END Get the releasebranch implementation
+
 
         if (getDescriptor().getUseFrench())
             l.println("Bonjour, "+name+"!");
@@ -83,15 +112,55 @@ public class UpmergeBuilder extends Builder {
         // this is just a test :)
         FogbugzCase fbCase = caseManager.getCaseById(3);
 
+        String branchName;
         try {
-            String branchName = executor.runCommand("hg branch");
+            branchName = executor.runCommand("hg branch");
         } catch (Exception e) {
             log.log(Level.SEVERE, "ERRRUR", e);
             return false;
         }
 
+        ReleaseBranch releaseBranch = null;
+        try {
+            releaseBranch = (ReleaseBranch) releaseBranchImpl.getConstructor(ReleaseBranch.class, String.class).newInstance(branchName);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Invalid releasebranch implementation found.", e);
+            return false;
+        }
+
         AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
-        l.print(AdvancedMercurialManager.prettyPrintBranchlist(amm.getBranches()));
+        List<MercurialBranch> branchList = amm.getBranches();
+        l.print(AdvancedMercurialManager.prettyPrintBranchlist(branchList));
+
+        ReleaseBranch nextBranch = null;
+        try {
+            nextBranch = releaseBranch.copy();
+        } catch (ReleaseBranchInvalidException e) {
+            log.info("NOW HOW DID THAT HAPPEN?");
+            return false;
+        }
+        nextBranch.next();
+
+        List<String> branchesToPush = new ArrayList<String>();
+        branchesToPush.add(releaseBranch.getName());
+
+        int retries = 0;
+        do {
+            if (this.isInBranchList(releaseBranch.getName(), branchList)) {
+                amm.update(nextBranch.getName());
+                amm.mergeWorkspaceWith(releaseBranch.getName());
+                amm.commit("[Jenkins Upmerging] Merged " + releaseBranch.getName() + " with " + nextBranch.getName());
+                branchesToPush.add(nextBranch.getName());
+
+                retries = 0;
+            } else {
+                retries++;
+            }
+
+            // Bump releases
+            releaseBranch.next();
+            nextBranch.next();
+        }  while(retries < 5);
 
         return true;
 
@@ -115,6 +184,15 @@ public class UpmergeBuilder extends Builder {
          * - Trigger new builds on all branches that have been merged.
          *
          */
+    }
+
+    private boolean isInBranchList(String branchName, List<MercurialBranch> list) {
+        for (MercurialBranch b : list) {
+            if (b.getBranchName().equals(branchName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public DescriptorImpl getDescriptor() {

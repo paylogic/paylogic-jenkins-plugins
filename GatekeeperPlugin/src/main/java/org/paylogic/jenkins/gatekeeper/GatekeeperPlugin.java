@@ -51,11 +51,13 @@ public class GatekeeperPlugin extends Builder {
         CaseStorageApi caseManager = CaseStorageApi.get();
         String branchName = amm.getBranch();
         List<CachedCase> cc = new ArrayList<CachedCase>();
+        /*
         try {
              cc = caseManager.getCasesByFeatureBranch(branchName);
         } catch (SQLException e) {
             log.log(Level.SEVERE, "Exception while trying to fetch case from cache.", e);
         }
+        */
 
         String featureBranch = "";
         String targetBranch = "";

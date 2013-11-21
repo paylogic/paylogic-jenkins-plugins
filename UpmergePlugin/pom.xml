@@ -15,13 +15,13 @@
       <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>Fogbugz</artifactId>
-          <version>1.0</version>
+          <version>1.0.1</version>
           <scope>compile</scope>
       </dependency>
       <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>FogbugzPlugin</artifactId>
-          <version>0.2.1</version>
+          <version>0.3.12</version>
           <scope>compile</scope>
       </dependency>
       <dependency>
@@ -43,9 +43,13 @@
       <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>AdvancedMercurial</artifactId>
-          <version>1.0</version>
+          <version>1.0.1</version>
       </dependency>
-
+      <dependency>
+          <groupId>org.paylogic</groupId>
+          <artifactId>GatekeeperPlugin</artifactId>
+          <version>1.0.2</version>
+      </dependency>
   </dependencies>
 
     <build>
