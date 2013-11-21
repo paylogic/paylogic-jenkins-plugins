@@ -93,23 +93,22 @@ public class CaseStorageApi implements UnprotectedRootAction {
     }
 
     public CachedCase getCaseById(int caseid) throws IOException, SQLException {
+        Jenkins.getInstance().getInjector().injectMembers(this);
         EntityManager em = ps.getGlobalEntityManagerFactory().createEntityManager();
-        TypedQuery<CachedCase> query = em.createNamedQuery("CachedCase.findAllCachedCasesById", CachedCase.class);
+        TypedQuery<CachedCase> query = em.createQuery("SELECT fbcase FROM CachedCase fbcase WHERE fbcase.id = :caseid", CachedCase.class);
         query.setParameter("id", caseid);
-        List<CachedCase> cc = query.getResultList();
-        if (cc.size() > 0) {
-            return cc.get(0);
-        }
-
-        return null;
+        return query.getSingleResult();
     }
 
     public List<CachedCase> getCasesByFeatureBranch(String featureBranch) throws IOException, SQLException {
+        Jenkins.getInstance().getInjector().injectMembers(this);
         EntityManager em = ps.getGlobalEntityManagerFactory().createEntityManager();
-        TypedQuery<CachedCase> query = em.createNamedQuery("CachedCase.findAllCachedCasesByFeatureBranch", CachedCase.class);
-        query.setParameter("featureBranch", featureBranch);
-        List<CachedCase> cc = query.getResultList();
-        return cc;
+        //TypedQuery<CachedCase> query = em.createQuery("SELECT fbcase FROM CachedCase fbcase WHERE fbcase.featureBranch = :featureBranch", CachedCase.class);
+        //query.setParameter("featureBranch", featureBranch);
+        //return query.getResultList();
+        Query q = em.createNativeQuery("SELECT * FROM CachedCase WHERE featureBranch = ?", CachedCase.class);
+        q.setParameter(1, featureBranch);
+        return q.getResultList();
     }
 
     public static CaseStorageApi get() {

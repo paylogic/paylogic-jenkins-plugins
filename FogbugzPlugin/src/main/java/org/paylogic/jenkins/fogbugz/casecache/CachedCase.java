@@ -2,9 +2,7 @@ package org.paylogic.jenkins.fogbugz.casecache;
 
 import org.jenkinsci.plugins.database.jpa.GlobalTable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.io.Serializable;
 
 

@@ -8,20 +8,24 @@
 
   <groupId>org.paylogic</groupId>
   <artifactId>GatekeeperPlugin</artifactId>
-  <version>1.0</version>
+  <version>0.1</version>
   <packaging>hpi</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.paylogic</groupId>
+            <artifactId>Fogbugz</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.paylogic</groupId>
             <artifactId>FogbugzPlugin</artifactId>
-            <version>0.3</version>
+            <version>0.3.12</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.12.2</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.paylogic</groupId>
