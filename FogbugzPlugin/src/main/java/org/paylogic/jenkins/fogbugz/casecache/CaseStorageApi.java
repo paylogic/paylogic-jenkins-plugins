@@ -15,6 +15,7 @@ import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 
 import javax.persistence.EntityManager;
+import java.util.List;
 import java.util.logging.Level;
 
 
@@ -51,8 +52,14 @@ public class CaseStorageApi implements UnprotectedRootAction {
             em.getTransaction().begin();
             log.info("Started transaction");
 
-            log.info("Importing case....");
             CachedCase cc = new CachedCase();
+            CachedCase cases = em.find(CachedCase.class, caseid);
+            if (cases != null) {
+                log.info("Existing case found.");
+                cc = cases;
+            }
+
+            log.info("Importing case....");
             cc.id = fbCase.getId();
             cc.title = fbCase.getTitle();
             cc.assignedTo = fbCase.getAssignedTo();
@@ -63,7 +70,7 @@ public class CaseStorageApi implements UnprotectedRootAction {
             cc.tags = fbCase.tagsToCSV();
             log.info("Done importing");
 
-            if (em.find(CachedCase.class, cc.id) != null) {
+            if (cases != null) {
                 log.info("Refreshing existing case");
                 em.merge(cc);
                 em.refresh(cc);
@@ -74,8 +81,6 @@ public class CaseStorageApi implements UnprotectedRootAction {
             log.info("Saved row");
             em.getTransaction().commit();
             log.info("Ended transaction");
-            em.flush();
-            log.info("Flushed transaction, just to be sure...");
             em.close();
             log.info("Closed connection");
 
