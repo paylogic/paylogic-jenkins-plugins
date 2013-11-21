@@ -27,4 +27,5 @@ public class CachedCase implements Serializable {
     @Column public String featureBranch;
     @Column public String originalBranch;
     @Column public String targetBranch;
+    @Column public String featureBranchPath;
 }

@@ -2,7 +2,6 @@ package org.paylogic.jenkins.fogbugz.casecache;
 
 import com.google.inject.Inject;
 import hudson.Extension;
-import hudson.model.AbstractModelObject;
 import hudson.model.RootAction;
 import hudson.model.UnprotectedRootAction;
 import jenkins.model.Jenkins;
@@ -10,11 +9,14 @@ import lombok.Setter;
 import lombok.extern.java.Log;
 import org.jenkinsci.plugins.database.jpa.PersistenceService;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -42,7 +44,6 @@ public class CaseStorageApi implements UnprotectedRootAction {
         Jenkins.getInstance().getInjector().injectMembers(this);
 
         try {
-            log.info("Got case id, and converted it successfully to integer");
             log.info("Fetching case");
             FogbugzCase fbCase = new FogbugzNotifier().getFogbugzCaseManager().getCaseById(caseid);
             log.info("Fetched case");
@@ -66,7 +67,9 @@ public class CaseStorageApi implements UnprotectedRootAction {
             cc.openedBy = fbCase.getOpenedBy();
             cc.targetBranch = fbCase.getTargetBranch();
             cc.originalBranch = fbCase.getOriginalBranch();
-            cc.featureBranch = fbCase.getFeatureBranch();
+            // TODO: make split with regex and nicer and fail-proof
+            cc.featureBranch = fbCase.getFeatureBranch().split("#")[1];
+            cc.featureBranchPath = fbCase.getFeatureBranch();
             cc.tags = fbCase.tagsToCSV();
             log.info("Done importing");
 
@@ -87,6 +90,26 @@ public class CaseStorageApi implements UnprotectedRootAction {
         } catch (Exception e) {
             log.log(Level.SEVERE, "Exception during execution of case hook", e);
         }
+    }
+
+    public CachedCase getCaseById(int caseid) throws IOException, SQLException {
+        EntityManager em = ps.getGlobalEntityManagerFactory().createEntityManager();
+        TypedQuery<CachedCase> query = em.createNamedQuery("CachedCase.findAllCachedCasesById", CachedCase.class);
+        query.setParameter("id", caseid);
+        List<CachedCase> cc = query.getResultList();
+        if (cc.size() > 0) {
+            return cc.get(0);
+        }
+
+        return null;
+    }
+
+    public List<CachedCase> getCasesByFeatureBranch(String featureBranch) throws IOException, SQLException {
+        EntityManager em = ps.getGlobalEntityManagerFactory().createEntityManager();
+        TypedQuery<CachedCase> query = em.createNamedQuery("CachedCase.findAllCachedCasesByFeatureBranch", CachedCase.class);
+        query.setParameter("featureBranch", featureBranch);
+        List<CachedCase> cc = query.getResultList();
+        return cc;
     }
 
     public static CaseStorageApi get() {

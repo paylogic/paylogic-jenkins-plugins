@@ -14,9 +14,8 @@
     <dependencies>
         <dependency>
             <groupId>org.paylogic</groupId>
-            <artifactId>Fogbugz</artifactId>
-            <version>1.0</version>
-            <scope>compile</scope>
+            <artifactId>FogbugzPlugin</artifactId>
+            <version>0.3</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
