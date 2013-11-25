@@ -1,6 +1,7 @@
 package org.paylogic.jenkins.upmerge.releasebranch;
 
 import hudson.Extension;
+import org.paylogic.fogbugz.FogbugzConstants;
 
 import java.text.DecimalFormat;
 
@@ -19,7 +20,7 @@ public class ReleaseBranchImpl extends ReleaseBranch {
      */
     public ReleaseBranchImpl(String startBranch) throws ReleaseBranchInvalidException {
         super(startBranch);
-        if (startBranch.length() != 5) {
+        if (!startBranch.matches(FogbugzConstants.RELEASEBRANCH_REGEX)) {
             throw new ReleaseBranchInvalidException("Release branch " + startBranch + " is invalid.");
         }
         this.df = new DecimalFormat("00");

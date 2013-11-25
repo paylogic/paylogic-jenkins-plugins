@@ -151,4 +151,20 @@ public class AdvancedMercurialManager {
         return this.mergeWorkspaceWith(revision);
     }
 
+
+    /**
+     * Executes 'hg push'
+     * @param revision Revision to push
+     */
+    public String push(String revision) {
+        String output = "";
+        try {
+            String[] command = {this.hgExe, "push", revision};
+            output = this.executor.runCommand(command);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Execption during push :(", e);
+        }
+        return output;
+    }
+
 }

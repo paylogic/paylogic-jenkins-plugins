@@ -19,6 +19,8 @@ import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 import org.paylogic.jenkins.fogbugz.casecache.CachedCase;
 import org.paylogic.jenkins.fogbugz.casecache.CaseStorageApi;
+import org.paylogic.redis.RedisProvider;
+import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -43,13 +45,20 @@ public class GatekeeperPlugin extends Builder {
         PrintStream l = listener.getLogger();
 
         EnvVars envVars = build.getEnvironment(listener);
+        Jedis redis = new RedisProvider().getConnection();
+        l.print("Build uuid: " + build.getExternalizableId());
 
         String givenNodeId = Util.replaceMacro("$NODE_ID", envVars);
         l.println("Resolved node id: "+ givenNodeId);
 
         AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
         CaseStorageApi caseManager = CaseStorageApi.get();
-        String branchName = amm.getBranch();
+        String branchName = "";
+        if (givenNodeId.matches(FogbugzConstants.FEATUREBRANCH_REGEX)) {
+            branchName = givenNodeId;
+        } else {
+            branchName = amm.getBranch();
+        }
         List<CachedCase> cc = new ArrayList<CachedCase>();
         /*
         try {
@@ -67,9 +76,10 @@ public class GatekeeperPlugin extends Builder {
             log.info("No case found in cache, falling back to 'guess' mode.");
             if (!branchName.matches(FogbugzConstants.FEATUREBRANCH_REGEX)) {
                 log.info("No cases found, aborting...");
+                redis.disconnect();
                 return false;
             }
-            log.info("Current branch matches feature branch regex.");
+            log.info("Current branch '" + branchName + "' matches feature branch regex.");
             log.info("Fetching case by branch name from Fogbugz.");
             FogbugzCase fallbackCase = new FogbugzNotifier().getFogbugzCaseManager().getCaseById(
                     Integer.parseInt(branchName.substring(1, branchName.length())));
@@ -91,17 +101,18 @@ public class GatekeeperPlugin extends Builder {
         amm.mergeWorkspaceWith(branchName);
         amm.commit("[Jenkins Integration Merge] Merge " + branchName + " with " + targetBranch);
 
+        // Add commit to list of things to push.
+        redis.rpush("topush_" + build.getExternalizableId(), targetBranch);
+        redis.disconnect();
+        l.println("Pushed value to redis");
         return true;
     }
 
-    // Overridden for better type safety.
-    // If your plugin doesn't really define any property on Descriptor,
-    // you don't have to do this.
+
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl)super.getDescriptor();
     }
-
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {

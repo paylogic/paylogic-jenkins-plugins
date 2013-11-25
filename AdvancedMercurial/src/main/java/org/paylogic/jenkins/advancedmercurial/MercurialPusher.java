@@ -1,0 +1,64 @@
+package org.paylogic.jenkins.advancedmercurial;
+
+import hudson.Extension;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Builder;
+import lombok.extern.java.Log;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.paylogic.redis.RedisProvider;
+import redis.clients.jedis.Jedis;
+
+import java.util.List;
+
+/**
+ * Fetches a list of branches to push from Redis.
+ * Meant to be used in combination with GatekeeperPlugin and/or UpmergePlugin.
+ */
+@Log
+public class MercurialPusher extends Builder {
+
+    @DataBoundConstructor
+    public MercurialPusher() {}
+
+
+    @Override
+    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+        Jedis redis = new RedisProvider().getConnection();
+        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
+
+        List<String> branchesToPush = redis.lrange("topush_" + build.getExternalizableId(), 0, -1);
+        for (String branch: branchesToPush) {
+            amm.update(branch);
+            amm.push(branch);
+        }
+
+        return true;
+    }
+
+
+    @Extension // This indicates to Jenkins that this is an implementation of an extension point.
+    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+        /**
+         * Returns true if this task is applicable to the given project.
+         *
+         * @return true to allow user to configure this post-promotion task for the given project.
+         * @see hudson.model.AbstractProject.AbstractProjectDescriptor#isApplicable(hudson.model.Descriptor)
+         */
+        @Override
+        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            return true;
+        }
+
+        /**
+         * Human readable name of this kind of configurable object.
+         */
+        @Override
+        public String getDisplayName() {
+            return "Mercurial Pusher";
+        }
+    }
+}

@@ -160,6 +160,8 @@
     <orderEntry type="library" name="Maven: javassist:javassist:3.12.0.GA" level="project" />
     <orderEntry type="library" name="Maven: org.jenkins-ci.plugins:database-mysql:1.0" level="project" />
     <orderEntry type="library" name="Maven: mysql:mysql-connector-java:5.1.21" level="project" />
+    <orderEntry type="library" name="Maven: org.paylogic:redis:1.0" level="project" />
+    <orderEntry type="library" name="Maven: redis.clients:jedis:2.0.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.jenkins-ci.main:jenkins-war:war:1.540" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.jenkins-ci.main:jenkins-test-harness:1.540" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.jenkins-ci.main:jenkins-war:war-for-test:1.540" level="project" />

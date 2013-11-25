@@ -3,18 +3,17 @@ import hudson.Launcher;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.Result;
-import hudson.util.FormValidation;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import jenkins.model.Jenkins;
+import lombok.Getter;
 import lombok.extern.java.Log;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.QueryParameter;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
@@ -24,9 +23,9 @@ import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranch;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranchImpl;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranchInvalidException;
+import org.paylogic.redis.RedisProvider;
+import redis.clients.jedis.Jedis;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,45 +33,25 @@ import java.util.Map;
 import java.util.logging.Level;
 
 /**
- * Sample {@link Builder}.
- *
- * <p>
- * When the user configures the project and enables this builder,
- * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked
- * and a new {@link UpmergeBuilder} is created. The created
- * instance is persisted to the project configuration XML by using
- * XStream, so this allows you to use instance fields (like {@link #name})
- * to remember the configuration.
- *
- * <p>
- * When a build is performed, the {@link #perform(AbstractBuild, Launcher, BuildListener)}
- * method will be invoked. 
- *
- * @author Kohsuke Kawaguchi
+ * UpmergeBuilder!
  */
 @Log
 public class UpmergeBuilder extends Builder {
 
-    private final String name;
+    @Getter
+    private final boolean run_always;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public UpmergeBuilder(String name) {
-        this.name = name;
-    }
-
-    /**
-     * We'll use this from the <tt>config.jelly</tt>.
-     */
-    public String getName() {
-        return name;
+    public UpmergeBuilder(boolean run_always) {
+        this.run_always = run_always;
     }
 
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
         // This is where you 'build' the project.
         // Since this is a dummy, we just say 'hello world' and call that a build.
-        if (build.getResult() != Result.SUCCESS) {
+        if (build.getResult() != Result.SUCCESS && !this.run_always) {
             log.info("Not running build due to no successful tests.");
             return false;
         }
@@ -80,6 +59,7 @@ public class UpmergeBuilder extends Builder {
         // This also shows how you can consult the global configuration of the builder
         PrintStream l = listener.getLogger();
 
+        /* Wheird generics logic which does not work at all.
         // Get the ReleaseBranch implementation
         Class<?> releaseBranchImpl = null;
         for (ReleaseBranch r: ReleaseBranch.all()) {
@@ -97,14 +77,11 @@ public class UpmergeBuilder extends Builder {
         }
 
         // END Get the releasebranch implementation
-
-
-        if (getDescriptor().getUseFrench())
-            l.println("Bonjour, "+name+"!");
-        else
-            l.println("Hello, "+name+"!");
+        */
 
         ExecutionHelper executor = new ExecutionHelper(build, launcher);
+        RedisProvider redisProvider = new RedisProvider();
+        Jedis redis = redisProvider.getConnection();
 
         Map buildVariables = build.getBuildVariables();
 
@@ -113,8 +90,9 @@ public class UpmergeBuilder extends Builder {
         FogbugzCase fbCase = caseManager.getCaseById(3);
 
         String branchName;
+
         try {
-            branchName = executor.runCommand("hg branch");
+            branchName = executor.runCommandClean("hg branch");
         } catch (Exception e) {
             log.log(Level.SEVERE, "ERRRUR", e);
             return false;
@@ -122,7 +100,7 @@ public class UpmergeBuilder extends Builder {
 
         ReleaseBranch releaseBranch = null;
         try {
-            releaseBranch = (ReleaseBranch) releaseBranchImpl.getConstructor(ReleaseBranch.class, String.class).newInstance(branchName);
+            releaseBranch = new ReleaseBranchImpl(branchName);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Invalid releasebranch implementation found.", e);
             return false;
@@ -150,6 +128,8 @@ public class UpmergeBuilder extends Builder {
                 amm.update(nextBranch.getName());
                 amm.mergeWorkspaceWith(releaseBranch.getName());
                 amm.commit("[Jenkins Upmerging] Merged " + releaseBranch.getName() + " with " + nextBranch.getName());
+
+                redis.rpush("topush_" + build.getExternalizableId(), nextBranch.getName());
                 branchesToPush.add(nextBranch.getName());
 
                 retries = 0;
@@ -162,6 +142,7 @@ public class UpmergeBuilder extends Builder {
             nextBranch.next();
         }  while(retries < 5);
 
+        redis.disconnect();
         return true;
 
         /**
@@ -209,14 +190,6 @@ public class UpmergeBuilder extends Builder {
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        /**
-         * To persist global configuration information,
-         * simply store it in a field and call save().
-         *
-         * <p>
-         * If you don't want fields to be persisted, use <tt>transient</tt>.
-         */
-        private boolean useFrench;
 
         /**
          * In order to load the persisted global configuration, you have to 
@@ -238,23 +211,6 @@ public class UpmergeBuilder extends Builder {
             load();
         }
 
-        /**
-         * Performs on-the-fly validation of the form field 'name'.
-         *
-         * @param value
-         *      This parameter receives the value that the user has typed.
-         * @return
-         *      Indicates the outcome of the validation. This is sent to the browser.
-         */
-        public FormValidation doCheckName(@QueryParameter String value)
-                throws IOException, ServletException {
-            if (value.length() == 0)
-                return FormValidation.error("Please set a name");
-            if (value.length() < 4)
-                return FormValidation.warning("Isn't the name too short?");
-            return FormValidation.ok();
-        }
-
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             // Indicates that this builder can be used with all kinds of project types 
             return true;
@@ -271,21 +227,8 @@ public class UpmergeBuilder extends Builder {
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
             // To persist global configuration information,
             // set that to properties and call save().
-            useFrench = formData.getBoolean("useFrench");
-            // ^Can also use req.bindJSON(this, formData);
-            //  (easier when there are many fields; need set* methods for this, like setUseFrench)
             save();
             return super.configure(req,formData);
-        }
-
-        /**
-         * This method returns true if the global configuration says we should speak French.
-         *
-         * The method name is bit awkward because global.jelly calls this method to determine
-         * the initial state of the checkbox by the naming convention.
-         */
-        public boolean getUseFrench() {
-            return useFrench;
         }
     }
 }
