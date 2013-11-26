@@ -15,7 +15,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
-import org.paylogic.jenkins.executionhelper.ExecutionHelper;
 
 import java.util.HashMap;
 import java.util.Map;

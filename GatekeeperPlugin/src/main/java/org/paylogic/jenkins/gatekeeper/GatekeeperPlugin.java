@@ -16,6 +16,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzConstants;
 import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
+import org.paylogic.jenkins.advancedmercurial.exceptions.MercurialException;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 import org.paylogic.jenkins.fogbugz.casecache.CachedCase;
 import org.paylogic.jenkins.fogbugz.casecache.CaseStorageApi;
@@ -93,13 +94,23 @@ public class GatekeeperPlugin extends Builder {
             targetBranch = fbCase.targetBranch;
         }
 
+        log.info("Branches: " + featureBranch + ", " + targetBranch + ", " + branchName);
+
         if (!branchName.equals(featureBranch)) {
             log.info("Branchnames are not equal: " + branchName + " -- " + featureBranch);
         }
 
-        amm.update(targetBranch);
-        amm.mergeWorkspaceWith(branchName);
-        amm.commit("[Jenkins Integration Merge] Merge " + branchName + " with " + targetBranch);
+        try {
+            amm.pull();
+            amm.update(targetBranch);
+            amm.mergeWorkspaceWith(featureBranch);
+            amm.commit("[Jenkins Integration Merge] Merge " + targetBranch + " with " + featureBranch);
+        } catch (MercurialException e) {
+            log.log(Level.SEVERE, "Exception during update:", e);
+            return false;
+        }
+
+        redis.set("old_" + build.getExternalizableId(), featureBranch);
 
         // Add commit to list of things to push.
         redis.rpush("topush_" + build.getExternalizableId(), targetBranch);

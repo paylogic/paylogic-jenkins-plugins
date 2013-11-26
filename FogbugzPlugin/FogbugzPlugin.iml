@@ -30,8 +30,7 @@
     <orderEntry type="library" name="Maven: com.github.stephenc.findbugs:findbugs-annotations:1.3.9-1" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:1.3.9" level="project" />
     <orderEntry type="library" name="Maven: org.jenkins-ci.plugins:scm-api:0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.paylogic:AdvancedMercurial:1.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.paylogic:ExecutionHelper:1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.paylogic:AdvancedMercurial:1.1.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.jenkins-ci.main:jenkins-core:1.540" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.jenkins-ci.main:remoting:2.33" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.jenkins-ci:constant-pool-scanner:1.2" level="project" />

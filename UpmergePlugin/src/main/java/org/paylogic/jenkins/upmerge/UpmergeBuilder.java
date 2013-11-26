@@ -14,12 +14,9 @@ import lombok.extern.java.Log;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-import org.paylogic.fogbugz.FogbugzCase;
-import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
 import org.paylogic.jenkins.advancedmercurial.MercurialBranch;
-import org.paylogic.jenkins.executionhelper.ExecutionHelper;
-import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
+import org.paylogic.jenkins.advancedmercurial.exceptions.MercurialException;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranch;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranchImpl;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranchInvalidException;
@@ -59,7 +56,7 @@ public class UpmergeBuilder extends Builder {
         // This also shows how you can consult the global configuration of the builder
         PrintStream l = listener.getLogger();
 
-        /* Wheird generics logic which does not work at all.
+        /* Wheird generics logic which does not work at all.....................
         // Get the ReleaseBranch implementation
         Class<?> releaseBranchImpl = null;
         for (ReleaseBranch r: ReleaseBranch.all()) {
@@ -82,21 +79,30 @@ public class UpmergeBuilder extends Builder {
         AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
         RedisProvider redisProvider = new RedisProvider();
         Jedis redis = redisProvider.getConnection();
+        String branchName = amm.getBranch();
 
         Map buildVariables = build.getBuildVariables();
 
-        FogbugzCaseManager caseManager = new FogbugzNotifier().getFogbugzCaseManager();
-        // this is just a test :)
-        FogbugzCase fbCase = caseManager.getCaseById(3);
-
-        String branchName;
-
-        try {
-            branchName = amm.getBranch();
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "ERRRUR", e);
-            return false;
-        }
+        /*
+         * Here we should do upmerging. Luckily, we can access the command line,
+         * and run stuff from there (on the agents even!). Better to use the mercurial plugin though.
+         * (edit: this seems to be not possible :| , so lets create our own one!).
+         *
+         * So:
+         * - Fetch case info using branch name.
+         * - NOT !! Create 'ReleaseBranch' object from case info and a nextBranch object which is releasebranch.copy().next();
+         * - Create ReleaseBranch object from current branch, we may expect that the GatekeeperPlugin set the correct one.
+         * - Initiate UpMerge sequence....
+         *   - Try to pull new code from nextBranch.getNext();
+         *   - Try to merge this new code with releaseBranch();
+         *   - Commit this shiny new code.
+         *   - Set a flag somewhere, indicating that this upmerge has been done.
+         *   - Repeat UpMerge sequence for next releases until there are no moar releases.
+         * - In some post-build thingy, push these new branches if all went well.
+         * - We SHOULD not have to do any cleanup actions, because workspace is force-cleared every build.
+         * - Rely on the FogbugzPlugin (dependency, see pom.xml) to do reporting of our upmerges.
+         * - Trigger new builds on all branches that have been merged.
+         */
 
         ReleaseBranch releaseBranch = null;
         try {
@@ -124,12 +130,16 @@ public class UpmergeBuilder extends Builder {
         int retries = 0;
         do {
             if (this.isInBranchList(releaseBranch.getName(), branchList)) {
-                amm.update(nextBranch.getName());
-                amm.mergeWorkspaceWith(releaseBranch.getName());
-                amm.commit("[Jenkins Upmerging] Merged " + releaseBranch.getName() + " with " + nextBranch.getName());
+                try {
+                    amm.update(nextBranch.getName());
+                    amm.mergeWorkspaceWith(releaseBranch.getName());
+                    amm.commit("[Jenkins Upmerging] Merged " + nextBranch.getName() + " with " + releaseBranch.getName());
+                    redis.rpush("topush_" + build.getExternalizableId(), nextBranch.getName());
+                    branchesToPush.add(nextBranch.getName());
 
-                redis.rpush("topush_" + build.getExternalizableId(), nextBranch.getName());
-                branchesToPush.add(nextBranch.getName());
+                } catch (MercurialException e) {
+                    log.log(Level.SEVERE, "Exception during Mercurial operations", e);
+                }
 
                 retries = 0;
             } else {
@@ -143,27 +153,6 @@ public class UpmergeBuilder extends Builder {
 
         redis.disconnect();
         return true;
-
-        /**
-         * Here we should do upmerging. Luckily, we can access the command line,
-         * and run stuff from there (on the agents even!). Better to use the mercurial plugin though.
-         * (edit: this seems to be not possible :| , so lets create our own one!).
-         *
-         * So:
-         * - Fetch case info using branch name.
-         * - Create 'ReleaseBranch' object from case info and a nextBranch object which is releasebranch.copy().next();
-         * - Initiate UpMerge sequence....
-         *   - Try to pull new code from nextBranch.getNext();
-         *   - Try to merge this new code with releaseBranch();
-         *   - Commit this shiny new code.
-         *   - Set a flag somewhere, indicating that this upmerge has been done.
-         *   - Repeat UpMerge sequence for next releases until there are no moar releases.
-         * - In some post-build thingy, push these new branches if all went well.
-         * - We SHOULD not have to do any cleanup actions, because workspace is force-cleared every build.
-         * - Rely on the FogbugzPlugin (dependency, see pom.xml) to do reporting of our upmerges.
-         * - Trigger new builds on all branches that have been merged.
-         *
-         */
     }
 
     private boolean isInBranchList(String branchName, List<MercurialBranch> list) {

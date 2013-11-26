@@ -9,10 +9,12 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import lombok.extern.java.Log;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.paylogic.jenkins.advancedmercurial.exceptions.MercurialException;
 import org.paylogic.redis.RedisProvider;
 import redis.clients.jedis.Jedis;
 
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * Fetches a list of branches to push from Redis.
@@ -32,8 +34,11 @@ public class MercurialPusher extends Builder {
 
         List<String> branchesToPush = redis.lrange("topush_" + build.getExternalizableId(), 0, -1);
         for (String branch: branchesToPush) {
-            amm.update(branch);
-            amm.push(branch);
+            try {
+                amm.push();
+            } catch (MercurialException e) {
+                log.log(Level.SEVERE, "Error during push:", e);
+            }
         }
 
         return true;

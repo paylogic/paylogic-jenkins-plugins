@@ -2,6 +2,7 @@ package org.paylogic.jenkins.advancedmercurial;
 
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.remoting.Channel;
 import lombok.extern.java.Log;
 
 import java.io.ByteArrayOutputStream;

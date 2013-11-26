@@ -3,7 +3,6 @@ package org.paylogic.jenkins.upmerge.releasebranch;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import jenkins.model.Jenkins;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Abstract class to represent a Release Branch.

@@ -5,6 +5,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.plugins.mercurial.MercurialSCM;
 import lombok.extern.java.Log;
+import org.paylogic.jenkins.advancedmercurial.exceptions.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,7 +94,7 @@ public class AdvancedMercurialManager {
      * Updates workspace to given revision/branch. Executes hg update <revision>.
      * @param revision : String with revision, hash of branchname to update to.
      */
-    public void update(String revision) {
+    public void update(String revision) throws MercurialException {
         String output = "";
         try {
             String[] command = {this.hgExe, "update", revision};
@@ -102,13 +103,19 @@ public class AdvancedMercurialManager {
             log.log(Level.SEVERE, "Exception occured during update of workspace.", e);
         }
         log.info(output);
+
+        if (output.contains("abort: unknown revision")) {
+            throw new UnknownRevisionException(output);
+        } else if (output.contains("abort:")) {
+            throw new MercurialException(output);
+        }
     }
 
     /**
      * Commit the workspace changes with the given message. Executes hg commit -m <message>.
      * @param message : String with message to give this commit.
      */
-    public void commit(String message) {
+    public void commit(String message) throws MercurialException {
         String output = "";
         try {
             String[] command = {this.hgExe, "commit", "-m", message};
@@ -117,6 +124,12 @@ public class AdvancedMercurialManager {
             log.log(Level.SEVERE, "Exception occured while trying to commit workspace changes.");
         }
         log.info(output);
+
+        if (output.contains("nothing changed")) {
+            throw new NothingChangedException(output);
+        } else if (output.contains("abort:")) {
+            throw new MercurialException(output);
+        }
     }
 
     /**
@@ -125,7 +138,7 @@ public class AdvancedMercurialManager {
      * @param revision : String with revision, hash or branchname to merge with.
      * @return String : Output of merge command (should be empty if all went well)
      */
-    public String mergeWorkspaceWith(String revision) {
+    public String mergeWorkspaceWith(String revision) throws MercurialException {
         String output = "";
         try {
             String[] command = {this.hgExe, "merge", revision};
@@ -133,8 +146,14 @@ public class AdvancedMercurialManager {
         } catch (Exception e) {
             log.log(Level.SEVERE, "Exception occured during merge of workspace with " + revision + ".", e);
         }
-        log.info(output);
-        return "";
+
+        if (output.contains("abort: merging") && output.contains("has no effect")) {
+            throw new MergeWontHaveEffectException(output);
+        } else if (output.contains("abort:")) {
+            throw new MercurialException(output);
+        }
+
+        return output;
     }
 
     /**
@@ -145,7 +164,7 @@ public class AdvancedMercurialManager {
      * @param updateTo : String with revision, hash or branchname to update to before merge.
      * @return String : output of command run.
      */
-    public String mergeWorkspaceWith(String revision, String updateTo) {
+    public String mergeWorkspaceWith(String revision, String updateTo) throws MercurialException {
         this.update(updateTo);
         return this.mergeWorkspaceWith(revision);
     }
@@ -153,17 +172,47 @@ public class AdvancedMercurialManager {
 
     /**
      * Executes 'hg push'
-     * @param revision Revision to push
      */
-    public String push(String revision) {
+    public String push() throws MercurialException {
         String output = "";
         try {
-            String[] command = {this.hgExe, "push", revision};
+            String[] command = {this.hgExe, "push"};
             output = this.executor.runCommand(command);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Execption during push :(", e);
         }
+
+        if (output.contains("abort: push creates new remote head")) {
+            throw new PushCreatesNewRemoteHeadException(output);
+        } else if (output.contains("abort:")) {
+            throw new MercurialException(output);
+        }
+
         return output;
+    }
+
+    /**
+     * Executes 'hg pull'
+     * @throws MercurialException
+     */
+    public String pull() throws MercurialException {
+        String output = "";
+        try {
+            String[] command = {this.hgExe, "pull"};
+            output = this.executor.runCommand(command);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Error durign mercuruial command exceution");
+        }
+
+        if (output.contains("abort:")) {
+            throw new MercurialException(output);
+        }
+        return output;
+    }
+
+    @Deprecated
+    public String push(String revision) throws MercurialException {
+        return this.push();
     }
 
 }
