@@ -151,7 +151,7 @@ public class UpmergeBuilder extends Builder {
             nextBranch.next();
         }  while(retries < 5);
 
-        redis.disconnect();
+        redisProvider.returnConnection(redis);
         return true;
     }
 

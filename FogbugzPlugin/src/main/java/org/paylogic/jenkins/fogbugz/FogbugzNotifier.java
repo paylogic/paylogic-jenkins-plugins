@@ -15,6 +15,8 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
+import org.paylogic.redis.RedisProvider;
+import redis.clients.jedis.Jedis;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,42 +70,57 @@ public class FogbugzNotifier extends Notifier {
         log.info(launcher.toString());
         log.info(listener.toString());
 
+        RedisProvider redisProvider = new RedisProvider();
+        Jedis redis = redisProvider.getConnection();
+
         SCM scm = build.getProject().getScm();
         log.info("SCM type: " + scm.getType());
 
         AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
 
         String output = amm.getBranch();
+        String branchAccordingToRedis = redis.get("old_" + build.getExternalizableId());
 
-        if (output.matches(FEATURE_BRANCH_REGEX) || output.startsWith("c")) {
-            log.info("Case branch found! Reporting to fogbugz now!");
-            // Probably a case branch :)
-            FogbugzCaseManager caseManager = this.getFogbugzCaseManager();
-            // Strip the 'c' from branch name, then fetch case with that.
-            FogbugzCase fbCase = caseManager.getCaseById(Integer.parseInt(output.substring(1, output.length())));
-            if (fbCase == null) {
-                log.log(Level.SEVERE, "Fetching case from fogbugz failed. Please check your settings.");
-                return false;
-            }
-            fbCase.assignToOpener();
-            //fbCase.addTag("merged");
-
-            Map<String, String> templateContext = new HashMap();
-            templateContext.put("url", build.getAbsoluteUrl());
-            templateContext.put("buildNumber", Integer.toString(build.getNumber()));
-            templateContext.put("buildResult", build.getResult().toString());
-
-            // Fetch&render templates, then save the template output together with the case.
-            Template mustacheTemplate;
-            if (build.getResult() == Result.SUCCESS) {
-                mustacheTemplate = Mustache.compiler().compile(this.getDescriptor().getSuccessfulBuildTemplate());
-            } else {
-                mustacheTemplate = Mustache.compiler().compile(this.getDescriptor().getFailedBuildTemplate());
-            }
-            caseManager.saveCase(fbCase, mustacheTemplate.execute(templateContext));
+        if (output.matches(FEATURE_BRANCH_REGEX)) {
+            log.info("Current branch is case branch, using that to find case in FB");
+        } else if (branchAccordingToRedis.matches(FEATURE_BRANCH_REGEX)) {
+            log.info("Current branch is no case branch, but branchname found in Redis is!");
+            output = branchAccordingToRedis;
         } else {
             log.info("No case branch found, currently not reporting to fogbugz.");
+            return false;  // TODO: should we return true or false here?
         }
+
+        FogbugzCaseManager caseManager = this.getFogbugzCaseManager();
+        // Strip the 'c' from branch name, then fetch case with that.
+        FogbugzCase fbCase = caseManager.getCaseById(Integer.parseInt(output.substring(1, output.length())));
+        if (fbCase == null) {
+            log.log(Level.SEVERE, "Fetching case from fogbugz failed. Please check your settings.");
+            return false;
+        }
+        fbCase.assignToOpener();
+        //fbCase.addTag("merged");
+
+        Map<String, String> templateContext = new HashMap();
+        templateContext.put("url", build.getAbsoluteUrl());
+        templateContext.put("buildNumber", Integer.toString(build.getNumber()));
+        templateContext.put("buildResult", build.getResult().toString());
+
+        String listOfBranchesMergedWith = "";
+        for (String branchName: redis.lrange("topush_" + build.getExternalizableId(), 0, -1)) {
+            listOfBranchesMergedWith += branchName + ", ";
+        }
+
+        templateContext.put("mergedwith", listOfBranchesMergedWith);
+
+        // Fetch&render templates, then save the template output together with the case.
+        Template mustacheTemplate;
+        if (build.getResult() == Result.SUCCESS) {
+            mustacheTemplate = Mustache.compiler().compile(this.getDescriptor().getSuccessfulBuildTemplate());
+        } else {
+            mustacheTemplate = Mustache.compiler().compile(this.getDescriptor().getFailedBuildTemplate());
+        }
+        caseManager.saveCase(fbCase, mustacheTemplate.execute(templateContext));
 
         return true;
     }
@@ -142,7 +159,8 @@ public class FogbugzNotifier extends Notifier {
 
         public String getFailedBuildTemplate() {
             if (this.failedBuildTemplate == null || this.failedBuildTemplate.isEmpty()) {
-                return "Jenkins reports that the build has failed :(";
+                return "Jenkins reports that the build has failed :(" +
+                        "\nView extended result here: {{url}}";
             } else {
                 return this.failedBuildTemplate;
             }
@@ -150,7 +168,9 @@ public class FogbugzNotifier extends Notifier {
 
         public String getSuccessfulBuildTemplate() {
             if (this.successfulBuildTemplate == null || this.successfulBuildTemplate.isEmpty()) {
-                return "Jenkins reports that the build was successful!";
+                return "Jenkins reports that the build was successful!" +
+                        "{{#mergedwith}}\nUpmerged: {{mergedwith}}{{/mergedwith}}" +
+                        "\nView extended result here: {{url}}";
             } else {
                 return this.successfulBuildTemplate;
             }

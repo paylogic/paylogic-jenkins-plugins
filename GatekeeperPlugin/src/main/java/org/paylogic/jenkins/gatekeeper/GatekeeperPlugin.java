@@ -46,7 +46,8 @@ public class GatekeeperPlugin extends Builder {
         PrintStream l = listener.getLogger();
 
         EnvVars envVars = build.getEnvironment(listener);
-        Jedis redis = new RedisProvider().getConnection();
+        RedisProvider redisProvider = new RedisProvider();
+        Jedis redis = redisProvider.getConnection();
         l.print("Build uuid: " + build.getExternalizableId());
 
         String givenNodeId = Util.replaceMacro("$NODE_ID", envVars);
@@ -114,7 +115,7 @@ public class GatekeeperPlugin extends Builder {
 
         // Add commit to list of things to push.
         redis.rpush("topush_" + build.getExternalizableId(), targetBranch);
-        redis.disconnect();
+        redisProvider.returnConnection(redis);
         l.println("Pushed value to redis");
         return true;
     }

@@ -23,7 +23,7 @@ public class CaseStorageApi implements UnprotectedRootAction {
     }
 
     public String getDisplayName() {
-        return null;
+        return "Case storage API. Not meant for end-users.";
     }
 
     public String getUrlName() {

@@ -29,18 +29,15 @@ public class MercurialPusher extends Builder {
 
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        Jedis redis = new RedisProvider().getConnection();
+        RedisProvider redisProvider = new RedisProvider();
+        Jedis redis = redisProvider.getConnection();
         AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
 
-        List<String> branchesToPush = redis.lrange("topush_" + build.getExternalizableId(), 0, -1);
-        for (String branch: branchesToPush) {
-            try {
-                amm.push();
-            } catch (MercurialException e) {
-                log.log(Level.SEVERE, "Error during push:", e);
-            }
+        try {
+            amm.push();
+        } catch (MercurialException e) {
+            log.log(Level.SEVERE, "Could not push changes...", e);
         }
-
         return true;
     }
 
