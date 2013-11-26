@@ -5,7 +5,6 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.plugins.mercurial.MercurialSCM;
 import lombok.extern.java.Log;
-import org.paylogic.jenkins.executionhelper.ExecutionHelper;
 
 import java.util.ArrayList;
 import java.util.List;

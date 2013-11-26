@@ -79,7 +79,7 @@ public class UpmergeBuilder extends Builder {
         // END Get the releasebranch implementation
         */
 
-        ExecutionHelper executor = new ExecutionHelper(build, launcher);
+        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
         RedisProvider redisProvider = new RedisProvider();
         Jedis redis = redisProvider.getConnection();
 
@@ -92,7 +92,7 @@ public class UpmergeBuilder extends Builder {
         String branchName;
 
         try {
-            branchName = executor.runCommandClean("hg branch");
+            branchName = amm.getBranch();
         } catch (Exception e) {
             log.log(Level.SEVERE, "ERRRUR", e);
             return false;
@@ -106,7 +106,6 @@ public class UpmergeBuilder extends Builder {
             return false;
         }
 
-        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
         List<MercurialBranch> branchList = amm.getBranches();
         l.print(AdvancedMercurialManager.prettyPrintBranchlist(branchList));
 

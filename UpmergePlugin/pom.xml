@@ -37,11 +37,6 @@
       </dependency>
       <dependency>
           <groupId>org.paylogic</groupId>
-          <artifactId>ExecutionHelper</artifactId>
-          <version>1.3</version>
-      </dependency>
-      <dependency>
-          <groupId>org.paylogic</groupId>
           <artifactId>AdvancedMercurial</artifactId>
           <version>1.0.1</version>
       </dependency>

@@ -1,4 +1,4 @@
-package org.paylogic.jenkins.executionhelper;
+package org.paylogic.jenkins.advancedmercurial;
 
 import hudson.Launcher;
 import hudson.model.AbstractBuild;

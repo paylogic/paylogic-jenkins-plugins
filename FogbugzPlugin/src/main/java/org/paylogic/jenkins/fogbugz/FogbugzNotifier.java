@@ -14,6 +14,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
+import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
 import org.paylogic.jenkins.executionhelper.ExecutionHelper;
 
 import java.util.HashMap;
@@ -71,17 +72,9 @@ public class FogbugzNotifier extends Notifier {
         SCM scm = build.getProject().getScm();
         log.info("SCM type: " + scm.getType());
 
-        ExecutionHelper executor = new ExecutionHelper(build, launcher);
+        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
 
-        String[] command = {"hg", "branch"};
-        String output = "";
-        try {
-            output = executor.runCommandClean(command);
-        } catch (Exception e) {
-            log.log(Level.INFO, "Exception while running command 'hg branch'", e);
-        }
-
-        log.info("Response from command: " + output);
+        String output = amm.getBranch();
 
         if (output.matches(FEATURE_BRANCH_REGEX) || output.startsWith("c")) {
             log.info("Case branch found! Reporting to fogbugz now!");
