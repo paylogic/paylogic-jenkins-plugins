@@ -86,6 +86,7 @@ public class FogbugzNotifier extends Notifier {
 
         String givenNodeId = replaceMacro("$NODE_ID", envVars);
         String givenCaseId = replaceMacro("$CASE_ID", envVars);
+        log.info("Given case id = " + givenCaseId);
 
         AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
 
@@ -94,7 +95,11 @@ public class FogbugzNotifier extends Notifier {
 
         if (output.matches(FEATURE_BRANCH_REGEX)) {
             log.info("Current branch is case branch, using that to find case in FB");
-        } else if (branchAccordingToRedis.matches(FEATURE_BRANCH_REGEX)) {
+        } else if (!givenCaseId.isEmpty() && !givenCaseId.equals("0")) {
+            log.info("Using given case ID for reporting.");
+        } else if (branchAccordingToRedis != null &&
+                    !branchAccordingToRedis.isEmpty() &&
+                    branchAccordingToRedis.matches(FEATURE_BRANCH_REGEX)) {
             log.info("Current branch is no case branch, but branchname found in Redis is!");
             output = branchAccordingToRedis;
         } else {
@@ -103,7 +108,6 @@ public class FogbugzNotifier extends Notifier {
                            // TODO: and does that even impact build status?
         }
 
-
         int usableCaseId = 0;
         if (!givenCaseId.isEmpty()) {
             usableCaseId = Integer.parseInt(givenCaseId);
@@ -111,6 +115,7 @@ public class FogbugzNotifier extends Notifier {
             // Strip the 'c' from branch name, then fetch case with that.
             usableCaseId = Integer.parseInt(output.substring(1, output.length()));
         }
+
 
         FogbugzCaseManager caseManager = this.getFogbugzCaseManager();
         FogbugzCase fbCase = caseManager.getCaseById(usableCaseId);
@@ -126,10 +131,17 @@ public class FogbugzNotifier extends Notifier {
         templateContext.put("buildNumber", Integer.toString(build.getNumber()));
         templateContext.put("buildResult", build.getResult().toString());
 
-        templateContext.put("buildHealth", build.getTestResultAction().getBuildHealth().getDescription());
-        templateContext.put("tests_failed", Integer.toString(build.getTestResultAction().getFailCount()));
-        templateContext.put("tests_skipped", Integer.toString(build.getTestResultAction().getSkipCount()));
-        templateContext.put("tests_total", Integer.toString(build.getTestResultAction().getTotalCount()));
+        //templateContext.put("buildHealth", build.getTestResultAction().getBuildHealth().getDescription());
+        try {
+            templateContext.put("tests_failed", Integer.toString(build.getTestResultAction().getFailCount()));
+            templateContext.put("tests_skipped", Integer.toString(build.getTestResultAction().getSkipCount()));
+            templateContext.put("tests_total", Integer.toString(build.getTestResultAction().getTotalCount()));
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Exception during fetching of test results:", e);
+            templateContext.put("tests_failed", "unknown");
+            templateContext.put("tests_skipped", "unknown");
+            templateContext.put("tests_total", "unknown");
+        }
 
         String listOfBranchesMergedWith = "";
         for (String branchName: redis.lrange("topush_" + build.getExternalizableId(), 0, -1)) {

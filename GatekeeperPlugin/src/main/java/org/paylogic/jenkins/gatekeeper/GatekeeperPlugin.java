@@ -43,8 +43,6 @@ public class GatekeeperPlugin extends Builder {
         PrintStream l = listener.getLogger();
 
         EnvVars envVars = build.getEnvironment(listener);
-        RedisProvider redisProvider = new RedisProvider();
-        Jedis redis = redisProvider.getConnection();
         l.print("Build uuid: " + build.getExternalizableId());
 
         String givenCaseId = Util.replaceMacro("$CASE_ID", envVars);
@@ -67,7 +65,6 @@ public class GatekeeperPlugin extends Builder {
         log.info("No cases in cache, falling back to 'guess' mode.");
         if (!branchName.matches(FogbugzConstants.FEATUREBRANCH_REGEX)) {
             log.info("No cases found, aborting...");
-            redisProvider.returnConnection(redis);
             return false;
         } else {
             usableCaseId = Integer.parseInt(branchName.substring(1, branchName.length()));
@@ -95,6 +92,8 @@ public class GatekeeperPlugin extends Builder {
             return false;
         }
 
+        RedisProvider redisProvider = new RedisProvider();
+        Jedis redis = redisProvider.getConnection();
         redis.set("old_" + build.getExternalizableId(), featureBranch);
 
         // Add commit to list of things to push.
