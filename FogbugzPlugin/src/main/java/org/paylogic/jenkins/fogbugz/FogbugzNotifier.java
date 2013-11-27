@@ -147,6 +147,8 @@ public class FogbugzNotifier extends Notifier {
         @Getter private String originalBranchFieldname;
         @Getter private String targetBranchFieldname;
 
+        @Getter private String job_to_trigger;
+
         private int mergekeeperUserId;
 
         public int getMergekeeperUserId() {
@@ -212,6 +214,7 @@ public class FogbugzNotifier extends Notifier {
 
             this.failedBuildTemplate = formData.getString("failedBuildTemplate");
             this.successfulBuildTemplate = formData.getString("successfulBuildTemplate");
+            this.job_to_trigger = formData.getString("job_to_trigger");
 
             save();
             return super.configure(req, formData);

@@ -1,5 +1,6 @@
 package org.paylogic.jenkins.fogbugz.casecache;
 
+/*
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.model.UnprotectedRootAction;
@@ -59,3 +60,5 @@ public class CaseStorageApi implements UnprotectedRootAction {
         return Jenkins.getInstance().getExtensionList(RootAction.class).get(CaseStorageApi.class);
     }
 }
+
+*/
