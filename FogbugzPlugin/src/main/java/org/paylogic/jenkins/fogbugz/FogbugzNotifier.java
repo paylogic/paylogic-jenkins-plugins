@@ -2,8 +2,10 @@ package org.paylogic.jenkins.fogbugz;
 
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.*;
 import hudson.scm.SCM;
 import hudson.tasks.*;
@@ -18,9 +20,12 @@ import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
 import org.paylogic.redis.RedisProvider;
 import redis.clients.jedis.Jedis;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+
+import static hudson.Util.*;
 
 
 /**
@@ -66,15 +71,21 @@ public class FogbugzNotifier extends Notifier {
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
         log.info("Now performing post-build action for Fogbugz reporting.");
-        log.info(build.getResult().toString());
-        log.info(launcher.toString());
-        log.info(listener.toString());
 
         RedisProvider redisProvider = new RedisProvider();
         Jedis redis = redisProvider.getConnection();
 
-        SCM scm = build.getProject().getScm();
-        log.info("SCM type: " + scm.getType());
+        EnvVars envVars = null;
+        try {
+            envVars = build.getEnvironment(listener);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "ERRORRRRRRRRRRBBLBL", e);
+        }
+
+        listener.getLogger().print("Build uuid: " + build.getExternalizableId());
+
+        String givenNodeId = replaceMacro("$NODE_ID", envVars);
+        String givenCaseId = replaceMacro("$CASE_ID", envVars);
 
         AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
 
@@ -89,11 +100,20 @@ public class FogbugzNotifier extends Notifier {
         } else {
             log.info("No case branch found, currently not reporting to fogbugz.");
             return false;  // TODO: should we return true or false here?
+                           // TODO: and does that even impact build status?
+        }
+
+
+        int usableCaseId = 0;
+        if (!givenCaseId.isEmpty()) {
+            usableCaseId = Integer.parseInt(givenCaseId);
+        } else {
+            // Strip the 'c' from branch name, then fetch case with that.
+            usableCaseId = Integer.parseInt(output.substring(1, output.length()));
         }
 
         FogbugzCaseManager caseManager = this.getFogbugzCaseManager();
-        // Strip the 'c' from branch name, then fetch case with that.
-        FogbugzCase fbCase = caseManager.getCaseById(Integer.parseInt(output.substring(1, output.length())));
+        FogbugzCase fbCase = caseManager.getCaseById(usableCaseId);
         if (fbCase == null) {
             log.log(Level.SEVERE, "Fetching case from fogbugz failed. Please check your settings.");
             return false;
@@ -106,10 +126,18 @@ public class FogbugzNotifier extends Notifier {
         templateContext.put("buildNumber", Integer.toString(build.getNumber()));
         templateContext.put("buildResult", build.getResult().toString());
 
+        templateContext.put("buildHealth", build.getTestResultAction().getBuildHealth().getDescription());
+        templateContext.put("tests_failed", Integer.toString(build.getTestResultAction().getFailCount()));
+        templateContext.put("tests_skipped", Integer.toString(build.getTestResultAction().getSkipCount()));
+        templateContext.put("tests_total", Integer.toString(build.getTestResultAction().getTotalCount()));
+
         String listOfBranchesMergedWith = "";
         for (String branchName: redis.lrange("topush_" + build.getExternalizableId(), 0, -1)) {
             listOfBranchesMergedWith += branchName + ", ";
         }
+
+        redis.expire("topush_" + build.getExternalizableId(), 3600);
+        redis.expire("old_" + build.getExternalizableId(), 3600);
 
         templateContext.put("mergedwith", listOfBranchesMergedWith);
 
@@ -161,7 +189,7 @@ public class FogbugzNotifier extends Notifier {
 
         public String getFailedBuildTemplate() {
             if (this.failedBuildTemplate == null || this.failedBuildTemplate.isEmpty()) {
-                return "Jenkins reports that the build has failed :(" +
+                return "Jenkins reports that the build has {{tests_failed}} failed tests :(" +
                         "\nView extended result here: {{url}}";
             } else {
                 return this.failedBuildTemplate;

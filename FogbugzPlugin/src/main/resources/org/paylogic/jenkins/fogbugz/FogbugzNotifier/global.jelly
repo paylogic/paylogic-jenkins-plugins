@@ -55,7 +55,7 @@
 
 	<f:entry title="Default Job to trigger on incoming Fogbugz event." field="job_to_trigger"
 	        description="The full name of the Job to trigger on incoming Fogbugz event">
-	        <f:textarea />
+	        <f:textbox />
 	</f:entry>
   </f:section>
 </j:jelly>

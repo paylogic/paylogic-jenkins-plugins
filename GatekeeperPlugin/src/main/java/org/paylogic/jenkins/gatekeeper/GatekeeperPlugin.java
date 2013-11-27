@@ -18,14 +18,11 @@ import org.paylogic.fogbugz.FogbugzConstants;
 import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
 import org.paylogic.jenkins.advancedmercurial.exceptions.MercurialException;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
-import org.paylogic.jenkins.fogbugz.casecache.CachedCase;
-import org.paylogic.jenkins.fogbugz.casecache.CaseStorageApi;
 import org.paylogic.redis.RedisProvider;
 import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -50,50 +47,37 @@ public class GatekeeperPlugin extends Builder {
         Jedis redis = redisProvider.getConnection();
         l.print("Build uuid: " + build.getExternalizableId());
 
+        String givenCaseId = Util.replaceMacro("$CASE_ID", envVars);
         String givenNodeId = Util.replaceMacro("$NODE_ID", envVars);
-        l.println("Resolved node id: "+ givenNodeId);
+        l.println("Resolved case id: "+ givenCaseId);
+        int iGivenCaseId = Integer.parseInt(givenCaseId);
+        int usableCaseId = 0;
 
         AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
-        CaseStorageApi caseManager = CaseStorageApi.get();
         String branchName = "";
-        if (givenNodeId.matches(FogbugzConstants.FEATUREBRANCH_REGEX)) {
+        if (iGivenCaseId != 0 && !givenNodeId.isEmpty()) {
             branchName = givenNodeId;
+            usableCaseId = iGivenCaseId;
         } else {
             branchName = amm.getBranch();
         }
-        List<CachedCase> cc = new ArrayList<CachedCase>();
-        /*
-        try {
-             cc = caseManager.getCasesByFeatureBranch(branchName);
-        } catch (SQLException e) {
-            log.log(Level.SEVERE, "Exception while trying to fetch case from cache.", e);
-        }
-        */
-
         String featureBranch = "";
         String targetBranch = "";
 
-        CachedCase fbCase = null;
-        if (cc.size() == 0) {
-            log.info("No case found in cache, falling back to 'guess' mode.");
-            if (!branchName.matches(FogbugzConstants.FEATUREBRANCH_REGEX)) {
-                log.info("No cases found, aborting...");
-                redis.disconnect();
-                return false;
-            }
-            log.info("Current branch '" + branchName + "' matches feature branch regex.");
-            log.info("Fetching case by branch name from Fogbugz.");
-            FogbugzCase fallbackCase = new FogbugzNotifier().getFogbugzCaseManager().getCaseById(
-                    Integer.parseInt(branchName.substring(1, branchName.length())));
-            log.info("Case retrieved, pulling data..");
-            featureBranch = fallbackCase.getFeatureBranch().split("#")[1];
-            targetBranch = fallbackCase.getTargetBranch();
+        log.info("No cases in cache, falling back to 'guess' mode.");
+        if (!branchName.matches(FogbugzConstants.FEATUREBRANCH_REGEX)) {
+            log.info("No cases found, aborting...");
+            redisProvider.returnConnection(redis);
+            return false;
         } else {
-            log.info("Pulling data from case in cache");
-            fbCase = cc.get(0);
-            featureBranch = fbCase.featureBranch;
-            targetBranch = fbCase.targetBranch;
+            usableCaseId = Integer.parseInt(branchName.substring(1, branchName.length()));
         }
+        log.info("Current branch '" + branchName + "' matches feature branch regex.");
+        log.info("Fetching case by branch name from Fogbugz.");
+        FogbugzCase fallbackCase = new FogbugzNotifier().getFogbugzCaseManager().getCaseById(usableCaseId);
+        log.info("Case retrieved, pulling data..");
+        featureBranch = fallbackCase.getFeatureBranch().split("#")[1];
+        targetBranch = fallbackCase.getTargetBranch();
 
         log.info("Branches: " + featureBranch + ", " + targetBranch + ", " + branchName);
 
