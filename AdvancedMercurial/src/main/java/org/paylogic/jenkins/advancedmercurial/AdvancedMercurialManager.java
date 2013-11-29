@@ -3,10 +3,14 @@ package org.paylogic.jenkins.advancedmercurial;
 
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
 import hudson.plugins.mercurial.MercurialSCM;
+import hudson.scm.SCM;
 import lombok.extern.java.Log;
+import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.paylogic.jenkins.advancedmercurial.exceptions.*;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -14,7 +18,7 @@ import java.util.logging.Level;
 /**
  * Custom class
  * for handling branches and merges with Mercurial repositories in Jenkins.
- * Maybe one day we should try to merge this back to the Jenkins plugin, as this is not really a plugin.
+ * Maybe one day we should try to merge this back to the Jenkins Mercurial plugin, as this is not really a plugin.
  */
 @Log
 public class AdvancedMercurialManager {
@@ -24,13 +28,38 @@ public class AdvancedMercurialManager {
     private AbstractBuild build;
     private Launcher launcher;
     private ExecutionHelper executor;
+    private BuildListener buildListener;
+    private PrintStream l;
 
-    public AdvancedMercurialManager(AbstractBuild build, Launcher launcher) {
-        this.repository = ((MercurialSCM) build.getProject().getScm());
+    public AdvancedMercurialManager(AbstractBuild build, Launcher launcher, BuildListener listener) throws Exception {
+        SCM scm = build.getProject().getScm();
+        // If SCM is just Mercurial, all is well.
+        if (scm instanceof MercurialSCM) {
+            this.repository = (MercurialSCM) scm;
+        } else if (scm instanceof MultiSCM) {
+            // Loop trough list of SCMs
+            for (SCM s: ((MultiSCM) scm).getConfiguredSCMs()) {
+                // If SCM is of type Mercurial
+                if (s instanceof MercurialSCM) {
+                    // And we find $NODE_ID as branch (expected behaviour)
+                    // TODO: not pretty...
+                    log.info(s.toString());
+                    if (((MercurialSCM) s).getBranch().equals("$NODE_ID")) {
+                        // Then this should be the repository we are after.
+                        this.repository = (MercurialSCM) s;
+                    }
+                }
+            }
+        }
+        if (this.repository == null) {
+            throw new Exception("AdvancedMercurialManager could not be initialized with this type of repo.");
+        }
         this.hgExe = repository.getDescriptor().getHgExe();
-        this.executor = new ExecutionHelper(build, launcher);
+        this.executor = new ExecutionHelper(build, launcher, listener);
         this.build = build;
         this.launcher = launcher;
+        this.buildListener = listener;
+        this.l = listener.getLogger();
     }
 
     /**
@@ -44,8 +73,11 @@ public class AdvancedMercurialManager {
             String[] command = {this.hgExe, "branches"};
             rawBranches = this.executor.runCommand(command);
         } catch (Exception e) {
+            l.append(rawBranches);
+            l.append(e.toString());
             return null;
         }
+        l.append(rawBranches);
         List<MercurialBranch> list = new ArrayList<MercurialBranch>();
         for (String line: rawBranches.split("\n")) {
             // line should contain: <branchName>                 <revision>:<hash>  (yes, with lots of whitespace)
@@ -85,8 +117,10 @@ public class AdvancedMercurialManager {
             String[] command = {this.hgExe, "branch"};
             branchName = this.executor.runCommandClean(command);
         } catch (Exception e) {
-            return "";
+            l.append(e.toString());
+            //return "";
         }
+        l.append(branchName);
         return branchName;
     }
 
@@ -98,9 +132,10 @@ public class AdvancedMercurialManager {
         String output = "";
         try {
             String[] command = {this.hgExe, "update", revision};
-            output = this.executor.runCommandClean(command);
+            output = this.executor.runCommand(command);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Exception occured during update of workspace.", e);
+            l.append(e.toString());
         }
         log.info(output);
 
@@ -122,6 +157,7 @@ public class AdvancedMercurialManager {
             output = this.executor.runCommand(command);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Exception occured while trying to commit workspace changes.");
+            l.append(e.toString());
         }
         log.info(output);
 
@@ -145,6 +181,7 @@ public class AdvancedMercurialManager {
             output = this.executor.runCommand(command);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Exception occured during merge of workspace with " + revision + ".", e);
+            l.append(e.toString());
         }
 
         if (output.contains("abort: merging") && output.contains("has no effect")) {
@@ -180,6 +217,7 @@ public class AdvancedMercurialManager {
             output = this.executor.runCommand(command);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Execption during push :(", e);
+            l.append(e.toString());
         }
 
         if (output.contains("abort: push creates new remote head")) {
@@ -202,6 +240,7 @@ public class AdvancedMercurialManager {
             output = this.executor.runCommand(command);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Error durign mercuruial command exceution");
+            l.append(e.toString());
         }
 
         if (output.contains("abort:")) {

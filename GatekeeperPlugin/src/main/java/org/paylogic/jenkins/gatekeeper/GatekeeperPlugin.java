@@ -23,8 +23,6 @@ import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 
 
@@ -51,7 +49,13 @@ public class GatekeeperPlugin extends Builder {
         int iGivenCaseId = Integer.parseInt(givenCaseId);
         int usableCaseId = 0;
 
-        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
+        AdvancedMercurialManager amm = null;
+        try {
+            amm = new AdvancedMercurialManager(build, launcher, listener);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "AdvancedMercurialManager could not be instantiated.", e);
+            return false;
+        }
         String branchName = "";
         if (iGivenCaseId != 0 && !givenNodeId.isEmpty()) {
             branchName = givenNodeId;
@@ -83,7 +87,7 @@ public class GatekeeperPlugin extends Builder {
         }
 
         try {
-            amm.pull();
+            //amm.pull();
             amm.update(targetBranch);
             amm.mergeWorkspaceWith(featureBranch);
             amm.commit("[Jenkins Integration Merge] Merge " + targetBranch + " with " + featureBranch);

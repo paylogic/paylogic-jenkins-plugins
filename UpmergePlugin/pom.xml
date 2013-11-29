@@ -8,27 +8,29 @@
 
   <groupId>org.paylogic</groupId>
   <artifactId>UpmergePlugin</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.8</version>
   <packaging>hpi</packaging>
 
   <dependencies>
       <dependency>
+          <groupId>org.jenkins-ci.main</groupId>
+          <artifactId>jenkins-core</artifactId>
+          <version>1.539</version>
+      </dependency>
+      <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>Fogbugz</artifactId>
-          <version>1.0.0</version>
-          <scope>compile</scope>
+          <version>1.0.1</version>
       </dependency>
       <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>FogbugzPlugin</artifactId>
-          <version>1.0.0</version>
-          <scope>compile</scope>
+          <version>1.0.9</version>
       </dependency>
       <dependency>
           <groupId>org.projectlombok</groupId>
           <artifactId>lombok</artifactId>
           <version>1.12.2</version>
-          <scope>compile</scope>
       </dependency>
       <dependency>
           <groupId>org.jenkins-ci.plugins</groupId>
@@ -38,17 +40,17 @@
       <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>AdvancedMercurial</artifactId>
-          <version>1.0.0</version>
+          <version>1.0.10</version>
       </dependency>
       <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>GatekeeperPlugin</artifactId>
-          <version>1.0.0</version>
+          <version>1.0.10</version>
       </dependency>
       <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>redis</artifactId>
-          <version>1.1.1</version>
+          <version>1.1.4</version>
        </dependency>
   </dependencies>
 

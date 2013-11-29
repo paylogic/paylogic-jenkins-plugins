@@ -31,7 +31,13 @@ public class MercurialPusher extends Builder {
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
         RedisProvider redisProvider = new RedisProvider();
         Jedis redis = redisProvider.getConnection();
-        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
+        AdvancedMercurialManager amm = null;
+        try {
+            amm = new AdvancedMercurialManager(build, launcher, listener);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "AdvancedMercurialManager could not be instantiated.", e);
+            return false;
+        }
 
         try {
             amm.push();

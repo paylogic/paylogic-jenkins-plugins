@@ -2,35 +2,38 @@ package org.paylogic.jenkins.advancedmercurial;
 
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
 import hudson.remoting.Channel;
 import lombok.extern.java.Log;
+import org.apache.commons.lang.StringUtils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 @Log
 public class ExecutionHelper {
     private AbstractBuild build;
     private Launcher launcher;
+    private BuildListener buildListener;
+    private PrintStream l;
 
-
-    public ExecutionHelper(AbstractBuild build, Launcher launcher) {
+    public ExecutionHelper(AbstractBuild build, Launcher launcher, BuildListener listener) {
         this.build = build;
         this.launcher = launcher;
+        this.buildListener = listener;
+        this.l = listener.getLogger();
     }
 
     public String runCommand(String[] command) throws IOException, InterruptedException {
         OutputStream os = new ByteArrayOutputStream();
         try {
-            this.launcher.launchChannel(command, os, this.build.getWorkspace(), this.build.getEnvVars());
-        } catch (EOFException e) {
-            log.info("End of file reached, command is done.");
+            this.launcher.launchChannel(command, os, build.getWorkspace(), build.getEnvVars());
+        } catch (Exception e) {
+            log.info("Command terminated prematurely...");
         }
 
         String output = os.toString();
         log.info("Response from command is: " + output);
+        l.append(output);
 
         return output;
     }

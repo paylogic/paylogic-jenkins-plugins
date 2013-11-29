@@ -88,7 +88,13 @@ public class FogbugzNotifier extends Notifier {
         String givenCaseId = replaceMacro("$CASE_ID", envVars);
         log.info("Given case id = " + givenCaseId);
 
-        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
+        AdvancedMercurialManager amm = null;
+        try {
+            amm = new AdvancedMercurialManager(build, launcher, listener);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "AdvancedMercurialManager could not be instantiated.", e);
+            return false;
+        }
 
         String output = amm.getBranch();
         String branchAccordingToRedis = redis.get("old_" + build.getExternalizableId());

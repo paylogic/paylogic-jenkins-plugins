@@ -53,7 +53,6 @@ public class UpmergeBuilder extends Builder {
             return false;
         }
 
-        // This also shows how you can consult the global configuration of the builder
         PrintStream l = listener.getLogger();
 
         /* Wheird generics logic which does not work at all.....................
@@ -76,7 +75,13 @@ public class UpmergeBuilder extends Builder {
         // END Get the releasebranch implementation
         */
 
-        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher);
+        AdvancedMercurialManager amm = null;
+        try {
+             amm = new AdvancedMercurialManager(build, launcher, listener);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "AdvancedMercurialManager could not be instantiated.", e);
+            return false;
+        }
         RedisProvider redisProvider = new RedisProvider();
         Jedis redis = redisProvider.getConnection();
         String branchName = amm.getBranch();
@@ -99,7 +104,7 @@ public class UpmergeBuilder extends Builder {
          *   - Set a flag somewhere, indicating that this upmerge has been done.
          *   - Repeat UpMerge sequence for next releases until there are no moar releases.
          * - In some post-build thingy, push these new branches if all went well.
-         * - We SHOULD not have to do any cleanup actions, because workspace is force-cleared every build.
+         * - We SHOULD not have to do any cleanup actions, because workspace is updated every build.
          * - Rely on the FogbugzPlugin (dependency, see pom.xml) to do reporting of our upmerges.
          * - Trigger new builds on all branches that have been merged.
          */
@@ -108,7 +113,7 @@ public class UpmergeBuilder extends Builder {
         try {
             releaseBranch = new ReleaseBranchImpl(branchName);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Invalid releasebranch implementation found.", e);
+            log.log(Level.SEVERE, "ReleaseBranchInvalid?.", e);
             return false;
         }
 
@@ -119,7 +124,7 @@ public class UpmergeBuilder extends Builder {
         try {
             nextBranch = releaseBranch.copy();
         } catch (ReleaseBranchInvalidException e) {
-            log.info("NOW HOW DID THAT HAPPEN?");
+            log.info("NOW HOW DID THAT HAPPEN? (ReleaseBranchInvalidException)");
             return false;
         }
         nextBranch.next();
@@ -208,7 +213,7 @@ public class UpmergeBuilder extends Builder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Does upmerging 'n stuff";
+            return "Upmerges the current release branch if any.";
         }
 
         @Override
