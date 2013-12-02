@@ -1,6 +1,7 @@
 package org.paylogic.jenkins.advancedmercurial;
 
 import hudson.Launcher;
+import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.remoting.Channel;
@@ -25,13 +26,16 @@ public class ExecutionHelper {
 
     public String runCommand(String[] command) throws IOException, InterruptedException {
         OutputStream os = new ByteArrayOutputStream();
+        Launcher.ProcStarter p = this.launcher.launch();
+        Proc pr = null;
         try {
-            this.launcher.launchChannel(command, os, build.getWorkspace(), build.getEnvVars());
+            pr = p.cmds(command).stdout(os).envs(this.build.getEnvVars()).start();
         } catch (Exception e) {
             log.info("Command terminated prematurely...");
         }
 
         String output = os.toString();
+        os.close();
         log.info("Response from command is: " + output);
         l.append(output);
 

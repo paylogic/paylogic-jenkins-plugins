@@ -8,7 +8,7 @@
 
   <groupId>org.paylogic</groupId>
   <artifactId>UpmergePlugin</artifactId>
-  <version>1.0.8</version>
+  <version>1.0.9</version>
   <packaging>hpi</packaging>
 
   <dependencies>
@@ -25,7 +25,7 @@
       <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>FogbugzPlugin</artifactId>
-          <version>1.0.9</version>
+          <version>1.0.10</version>
       </dependency>
       <dependency>
           <groupId>org.projectlombok</groupId>
@@ -40,12 +40,12 @@
       <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>AdvancedMercurial</artifactId>
-          <version>1.0.10</version>
+          <version>1.0.12</version>
       </dependency>
       <dependency>
           <groupId>org.paylogic</groupId>
           <artifactId>GatekeeperPlugin</artifactId>
-          <version>1.0.10</version>
+          <version>1.0.11</version>
       </dependency>
       <dependency>
           <groupId>org.paylogic</groupId>

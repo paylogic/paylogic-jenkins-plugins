@@ -139,6 +139,8 @@
     <orderEntry type="library" name="Maven: org.jenkins-ci.plugins:scm-api:0.1" level="project" />
     <orderEntry type="library" name="Maven: org.projectlombok:lombok:1.12.2" level="project" />
     <orderEntry type="library" name="Maven: org.paylogic:redis:1.1.4" level="project" />
+    <orderEntry type="library" name="Maven: redis.clients:jedis:2.0.0" level="project" />
+    <orderEntry type="library" name="Maven: commons-pool:commons-pool:1.5.5" level="project" />
     <orderEntry type="library" name="Maven: org.jenkins-ci.plugins:multiple-scms:0.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.jenkins-ci.main:jenkins-war:war:1.539" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.jenkins-ci.main:jenkins-test-harness:1.539" level="project" />
