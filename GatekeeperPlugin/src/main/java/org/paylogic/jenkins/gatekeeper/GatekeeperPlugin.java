@@ -122,7 +122,7 @@ public class GatekeeperPlugin extends Builder {
 
         @Override
         public String getDisplayName() {
-            return "Gatekeeper plugin";
+            return "Perform Gatekeerping.";
         }
     }
 }

@@ -49,13 +49,13 @@ public class UpmergeBuilder extends Builder {
         // This is where you 'build' the project.
         // Since this is a dummy, we just say 'hello world' and call that a build.
         if (build.getResult() != Result.SUCCESS && !this.run_always) {
-            log.info("Not running build due to no successful tests.");
+            log.info("Not running build due to failed tests.");
             return false;
         }
 
         PrintStream l = listener.getLogger();
 
-        /* Wheird generics logic which does not work at all.....................
+        /* Wheird generics logic which does not work at all..................... TODO: Fix
         // Get the ReleaseBranch implementation
         Class<?> releaseBranchImpl = null;
         for (ReleaseBranch r: ReleaseBranch.all()) {
@@ -213,7 +213,7 @@ public class UpmergeBuilder extends Builder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Upmerges the current release branch if any.";
+            return "Perform Upmerging of release branches.";
         }
 
         @Override

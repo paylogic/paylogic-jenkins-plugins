@@ -66,7 +66,7 @@ public class MercurialPusher extends Builder {
          */
         @Override
         public String getDisplayName() {
-            return "Mercurial Pusher";
+            return "Perform a Mercurial Push command.";
         }
     }
 }

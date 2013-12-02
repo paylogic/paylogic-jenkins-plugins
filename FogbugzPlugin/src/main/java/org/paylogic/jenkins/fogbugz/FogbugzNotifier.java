@@ -5,9 +5,7 @@ import com.samskivert.mustache.Template;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.Util;
 import hudson.model.*;
-import hudson.scm.SCM;
 import hudson.tasks.*;
 import lombok.Getter;
 import lombok.extern.java.Log;
@@ -20,7 +18,6 @@ import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
 import org.paylogic.redis.RedisProvider;
 import redis.clients.jedis.Jedis;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -58,7 +55,6 @@ public class FogbugzNotifier extends Notifier {
     }
     */
 
-	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
 	}
@@ -236,7 +232,7 @@ public class FogbugzNotifier extends Notifier {
 
 		@Override
 		public String getDisplayName() {
-            return "Fogbugz reporting plugin";
+            return "Report status to related FogBugz case.";
 		}
 
         @Override

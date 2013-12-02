@@ -7,10 +7,12 @@ import lombok.extern.java.Log;
 @Log
 public class FogbugzLinkAction implements Action {
     @Getter private int caseId;
+    @Getter private String caseUrl;
 
     public FogbugzLinkAction(int caseId) {
         super();
         this.caseId = caseId;
+        this.caseUrl = new FogbugzNotifier().getDescriptor().getUrl() + "default.asp?" + Integer.toString(caseId);
     }
 
     public String getIconFileName() {
@@ -18,7 +20,7 @@ public class FogbugzLinkAction implements Action {
     }
 
     public String getDisplayName() {
-        return "Fogbugz Link to Case";
+        return "Display a link to the related FogBugz case on the build page.";
     }
 
     public String getUrlName() {
