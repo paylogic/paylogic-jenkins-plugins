@@ -21,6 +21,6 @@ public class FogbugzLinkDescriptor extends BuildStepDescriptor<Publisher> {
 
     @Override
     public String getDisplayName() {
-        return "Adds fogbugz link to case on build page";
+        return "Add FogBugz link to related case on build page";
     }
 }
