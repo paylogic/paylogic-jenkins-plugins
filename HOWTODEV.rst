@@ -4,7 +4,7 @@ Working on these Jenkins plugins
 To get a local environment running, follow these steps:
 
 * Follow the `Jenkins plugin tutorial`_ to install the basics (My preferred IDE: IntelliJ IDEA Community Edition with IdeaVim plugin).
-* Ensure you have the Java 7 JRE and JDK from Oracle, so not the OpenJDK.
+* Ensure you have the Java 7 JRE and JDK from Oracle, so not the OpenJDK. Also install a Redis server.
 * `Set up a local Apache Archiva instance.`_ (Alternatively, get access on my local Archiva instance).
 * Clone this repository.
 * Put the URL to your Archiva instance in the pom.xml files, under `distributionManagement` (we should fix this and set up a LAN Archiva instance).
