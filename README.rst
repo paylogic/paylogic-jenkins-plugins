@@ -14,6 +14,30 @@ Plugins do the following:
 - GatekeeperPlugin: a Jenkins plugin that merges a feature branch to a release branch (meant to run before tests).
 - UpmergePlugin: a Jenkins plugin that merges current release branch to next release branch until there are no further releases available.
 
+Plugins depend on the `Jenkins Redis plugin`, which is in its own repository.
+
+
+How to get a build using all the plugins running
+------------------------------------------------
+
+* Install all .hpi files by uploading them to the Jenkins plugin manager.
+* Go to Jenkins' global settings page and set:
+  * Your redis server
+  * Your fogbugz information (you need to get a api token manually)
+  * The case to build on a fogbugz trigger (listed under fogbugz settings)
+* Create or edit a build and set the following:
+  * Make your build parametrized, and include 'NODE_ID' and 'CASE_ID' string parameters.
+  * Make your SCM branch '$NODE_ID'
+  * (Optional) set a build name like this: 'Case ${ENV, var="CASE_ID"} - Branch ${ENV, var="NODE_ID"} || Build #${BUILD_NUMBER}'
+  * Ensure you have the following build steps in this order:
+      * Add the 'Perform Gatekeepering' step and check the checkbox
+      * Add your build and tests steps
+      * Add the 'Perform Upmerging of release branches' step
+      * Add the 'Perform a Mercurial Push command' step
+  * Under post-build actions add:
+      * Add the 'Add fogbugz link to case on build page' action
+      * Add the 'Report status to related fogbugz case' action
+
 
 Contact
 -------
@@ -36,3 +60,4 @@ This software is licensed under the `MIT license`_
 .. _Paylogic: http://www.paylogic.com/
 .. _GitHub project page: https://github.com/paylogic/paylogic-jenkins-plugins
 .. _Maikel Wever: https://github.com/maikelwever/
+.. _Jenkins Redis plugin: https://github.com/paylogic/jenkins-redis-plugin/
