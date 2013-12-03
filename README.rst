@@ -21,6 +21,8 @@ How to get a build using all the plugins running
 ------------------------------------------------
 
 * Install all .hpi files by uploading them to the Jenkins plugin manager.
+  * Ensure you have installed the seperately provided Redis plugin.
+  * Also install the Mercurial and Multiple-SCMs plugins from the Jenkins marketplace.
 * Go to Jenkins' global settings page and set:
   * Your redis server
   * Your fogbugz information (you need to get a api token manually)
