@@ -52,7 +52,6 @@ public class FogbugzEventListener implements UnprotectedRootAction {
         }
 
         List<ParameterValue> parameters = new ArrayList<ParameterValue>();
-        parameters.add(new StringParameterValue("NODE_ID", featureBranch));
         parameters.add(new StringParameterValue("CASE_ID", Integer.toString(fbCase.getId())));
 
         for (Project<?, ?> p: Jenkins.getInstance().getItems(Project.class)) {

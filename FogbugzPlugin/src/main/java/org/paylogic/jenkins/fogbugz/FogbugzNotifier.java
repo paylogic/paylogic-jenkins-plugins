@@ -65,7 +65,6 @@ public class FogbugzNotifier extends Notifier {
         }
         listener.getLogger().print("Build uuid: " + build.getExternalizableId() + "\n");
 
-        String givenNodeId = replaceMacro("$NODE_ID", envVars);
         String givenCaseId = replaceMacro("$CASE_ID", envVars);
         log.info("Given case id = " + givenCaseId);
 

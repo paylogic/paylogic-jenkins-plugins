@@ -28,8 +28,8 @@ How to get a build using all the plugins running
   * Your fogbugz information (you need to get a api token manually)
   * The case to build on a fogbugz trigger (listed under fogbugz settings)
 * Create or edit a build and set the following:
-  * Make your build parametrized, and include 'NODE_ID' and 'CASE_ID' string parameters.
-  * Make your SCM branch '$NODE_ID'
+  * Make your build parametrized, and include 'CASE_ID' (and optionally REPO_SUBDIR for MultiSCM) string parameters.
+  * (Optional) If you use Multi-SCM, make your repository to merge on have $REPO_SUBDIR as path to checkout in.
   * (Optional) set a build name like this: 'Case ${ENV, var="CASE_ID"} - Branch ${ENV, var="NODE_ID"} || Build #${BUILD_NUMBER}'
   * Ensure you have the following build steps in this order:
       * Add the 'Perform Gatekeepering' step and check the checkbox

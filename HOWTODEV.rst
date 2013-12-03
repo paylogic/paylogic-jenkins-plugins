@@ -15,6 +15,7 @@ To get a local environment running, follow these steps:
 * To upload the plugins to live, use the `build_all` script or run `mvn deploy` or `mvn package` to generate a .hpi file in the `target/` folder.
 * If you want to edit the `Redis`_ plugin, clone that repository as well. Same instructions apply.
 * The `Fogbugz` project (so not FogbugzPlugin) is not a Jenkins package, it will be included by dependant plugins in the .hpi.
+* Read the README on howto to enable the plugins for a build.
 
 
 Because I went mad with the Seperation of Concerns, we now have a dependency hell. Got suggestions to fix this? Please do tell.

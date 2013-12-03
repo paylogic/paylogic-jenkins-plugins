@@ -10,10 +10,7 @@ import hudson.tasks.Builder;
 import lombok.extern.java.Log;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.paylogic.jenkins.advancedmercurial.exceptions.MercurialException;
-import org.paylogic.redis.RedisProvider;
-import redis.clients.jedis.Jedis;
 
-import java.util.List;
 import java.util.logging.Level;
 
 /**

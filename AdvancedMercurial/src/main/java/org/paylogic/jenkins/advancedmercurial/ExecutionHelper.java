@@ -1,27 +1,29 @@
 package org.paylogic.jenkins.advancedmercurial;
 
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Proc;
-import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import hudson.remoting.Channel;
 import lombok.extern.java.Log;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.*;
+import java.util.Map;
 
 @Log
 public class ExecutionHelper {
-    private AbstractBuild build;
+    private FilePath workingDirectory;
     private Launcher launcher;
     private BuildListener buildListener;
     private PrintStream l;
+    private Map envVars;
 
-    public ExecutionHelper(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        this.build = build;
+    public ExecutionHelper(Launcher launcher, BuildListener listener, Map envVars, FilePath workingDirectory) {
         this.launcher = launcher;
         this.buildListener = listener;
         this.l = listener.getLogger();
+        this.workingDirectory = workingDirectory;
+        this.envVars = envVars;
     }
 
     /**
@@ -31,22 +33,33 @@ public class ExecutionHelper {
      * @throws IOException
      * @throws InterruptedException
      */
-    public String runCommand(String[] command) throws IOException, InterruptedException {
+    public CommandResult runCommand(String[] command) throws IOException, InterruptedException {
+        /* Prepare command */
         OutputStream os = new ByteArrayOutputStream();
-        Launcher.ProcStarter p = this.launcher.launch();
+        OutputStream es = new ByteArrayOutputStream();
+        Launcher.ProcStarter p = this.launcher.launch().stdout(os).stderr(es);
         Proc pr = null;
+        int returnCode = 0;
+        log.info("Executing command '" + StringUtils.join(command, " ") + "'");
+
+        /* Actually run command */
         try {
-            pr = p.cmds(command).stdout(os).envs(this.build.getEnvVars()).start();
+            returnCode = p.cmds(command).envs(this.envVars).pwd(this.workingDirectory).join();
         } catch (Exception e) {
             log.info("Command terminated prematurely...");
         }
 
+        /* Parse, log and return output */
         String output = os.toString();
+        String error = es.toString();
         os.close();
+        es.close();
+        log.info("Command exit code: " + Integer.toString(returnCode));
         log.info("Response from command is: " + output);
+        log.info("StdErr from command is: " + error);
         l.append(output);
 
-        return output;
+        return new CommandResult(returnCode, output, error);
     }
 
     /**
@@ -57,7 +70,7 @@ public class ExecutionHelper {
      * @throws IOException
      * @throws InterruptedException
      */
-    public String runCommand(String command) throws IOException, InterruptedException {
+    public CommandResult runCommand(String command) throws IOException, InterruptedException {
         String[] splittedCommand = command.split(" ");
         return this.runCommand(splittedCommand);
     }
@@ -65,18 +78,18 @@ public class ExecutionHelper {
     /**
      * Runs the given command, and strips all whitespace from the output.
      */
-    public String runCommandClean(String[] command) throws IOException, InterruptedException {
-        String output = this.runCommand(command);
-        return this.clean(output);
+    public CommandResult runCommandClean(String[] command) throws IOException, InterruptedException {
+        CommandResult output = this.runCommand(command);
+        return new CommandResult(output.exitcode, this.clean(output.stdout), output.stderr);
     }
 
     /**
      * Runs the given command, and strips all whitespace from the output.
      * String version, splits by space characters.
      */
-    public String runCommandClean(String command) throws IOException, InterruptedException {
-        String output = this.runCommand(command);
-        return this.clean(output);
+    public CommandResult runCommandClean(String command) throws IOException, InterruptedException {
+        CommandResult output = this.runCommand(command);
+        return new CommandResult(output.exitcode, this.clean(output.stdout), output.stderr);
     }
 
     /**

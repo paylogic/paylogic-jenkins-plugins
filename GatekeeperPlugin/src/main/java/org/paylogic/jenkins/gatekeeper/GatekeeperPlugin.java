@@ -48,10 +48,8 @@ public class GatekeeperPlugin extends Builder {
         l.print("Build uuid: " + build.getExternalizableId());
 
         String givenCaseId = Util.replaceMacro("$CASE_ID", envVars);
-        String givenNodeId = Util.replaceMacro("$NODE_ID", envVars);
         l.println("Resolved case id: "+ givenCaseId);
-        int iGivenCaseId = Integer.parseInt(givenCaseId);
-        int usableCaseId = 0;
+        int usableCaseId = Integer.parseInt(givenCaseId);
 
         AdvancedMercurialManager amm = null;
         try {
@@ -61,37 +59,17 @@ public class GatekeeperPlugin extends Builder {
             return false;
         }
 
-        /* Try to resolve case ID using parameters or branch name */
-        String branchName = "";
-        if (iGivenCaseId != 0 && !givenNodeId.isEmpty()) {
-            branchName = givenNodeId;
-            usableCaseId = iGivenCaseId;
-        } else {
-            branchName = amm.getBranch();
-        }
+        /* Fetch branch information from Fogbugz */
         String featureBranch = "";
         String targetBranch = "";
 
-        if (!branchName.matches(FogbugzConstants.FEATUREBRANCH_REGEX)) {
-            log.info("No case IDs found, aborting...");
-            return false;
-        } else {
-            usableCaseId = Integer.parseInt(branchName.substring(1, branchName.length()));
-        }
-
-        /* Fetch branch information from Fogbugz */
-        log.info("Current branch '" + branchName + "' matches feature branch regex.");
         FogbugzCase fallbackCase = new FogbugzNotifier().getFogbugzCaseManager().getCaseById(usableCaseId);
         featureBranch = fallbackCase.getFeatureBranch().split("#")[1];
         targetBranch = fallbackCase.getTargetBranch();
 
-        if (!branchName.equals(featureBranch)) {
-            log.info("Branchnames are not equal: " + branchName + " -- " + featureBranch);
-        }
-
         /* Actual Gatekeepering logic. */
         try {
-            //amm.pull();
+            amm.pull();
             amm.update(targetBranch);
             amm.mergeWorkspaceWith(featureBranch);
             amm.commit("[Jenkins Integration Merge] Merge " + targetBranch + " with " + featureBranch);

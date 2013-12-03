@@ -11,7 +11,7 @@
 
     <groupId>org.paylogic</groupId>
     <artifactId>AdvancedMercurial</artifactId>
-    <version>1.0.13</version>
+    <version>1.0.17</version>
     <packaging>hpi</packaging>
 
     <dependencies>
@@ -35,11 +35,6 @@
             <groupId>org.paylogic</groupId>
             <artifactId>redis</artifactId>
             <version>1.1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>multiple-scms</artifactId>
-            <version>0.2</version>
         </dependency>
     </dependencies>
 

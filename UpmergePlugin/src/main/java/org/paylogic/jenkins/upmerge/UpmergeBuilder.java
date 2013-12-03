@@ -114,7 +114,6 @@ public class UpmergeBuilder extends Builder {
         }
 
         List<MercurialBranch> branchList = amm.getBranches();
-        l.print(AdvancedMercurialManager.prettyPrintBranchlist(branchList));
 
         ReleaseBranch nextBranch = null;
         try {
