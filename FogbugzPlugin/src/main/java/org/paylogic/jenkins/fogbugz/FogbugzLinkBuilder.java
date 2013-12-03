@@ -47,8 +47,8 @@ public class FogbugzLinkBuilder extends Recorder {
             }
         }
 
-        // Still no resolve case id, probably no case associated with this build.
-        // Just skip the adding of the action
+        // If we finally get a caseId, use that to create and attach a LinkAction.
+        // Else: just bail out.
         if (caseId != 0) {
             // Attach an Action to the Build.
             build.getActions().add(new FogbugzLinkAction(caseId));

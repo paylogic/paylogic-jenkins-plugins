@@ -26,6 +26,9 @@ import java.io.PrintStream;
 import java.util.logging.Level;
 
 
+/**
+ * Main extension of the GatekeeperPlugin. Does Gatekeepering.
+ */
 @Log
 public class GatekeeperPlugin extends Builder {
 
@@ -40,6 +43,7 @@ public class GatekeeperPlugin extends Builder {
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         PrintStream l = listener.getLogger();
 
+        /* Set up enviroment and resolve some variables. */
         EnvVars envVars = build.getEnvironment(listener);
         l.print("Build uuid: " + build.getExternalizableId());
 
@@ -56,6 +60,8 @@ public class GatekeeperPlugin extends Builder {
             log.log(Level.SEVERE, "AdvancedMercurialManager could not be instantiated.", e);
             return false;
         }
+
+        /* Try to resolve case ID using parameters or branch name */
         String branchName = "";
         if (iGivenCaseId != 0 && !givenNodeId.isEmpty()) {
             branchName = givenNodeId;
@@ -66,26 +72,24 @@ public class GatekeeperPlugin extends Builder {
         String featureBranch = "";
         String targetBranch = "";
 
-        log.info("No cases in cache, falling back to 'guess' mode.");
         if (!branchName.matches(FogbugzConstants.FEATUREBRANCH_REGEX)) {
-            log.info("No cases found, aborting...");
+            log.info("No case IDs found, aborting...");
             return false;
         } else {
             usableCaseId = Integer.parseInt(branchName.substring(1, branchName.length()));
         }
+
+        /* Fetch branch information from Fogbugz */
         log.info("Current branch '" + branchName + "' matches feature branch regex.");
-        log.info("Fetching case by branch name from Fogbugz.");
         FogbugzCase fallbackCase = new FogbugzNotifier().getFogbugzCaseManager().getCaseById(usableCaseId);
-        log.info("Case retrieved, pulling data..");
         featureBranch = fallbackCase.getFeatureBranch().split("#")[1];
         targetBranch = fallbackCase.getTargetBranch();
-
-        log.info("Branches: " + featureBranch + ", " + targetBranch + ", " + branchName);
 
         if (!branchName.equals(featureBranch)) {
             log.info("Branchnames are not equal: " + branchName + " -- " + featureBranch);
         }
 
+        /* Actual Gatekeepering logic. */
         try {
             //amm.pull();
             amm.update(targetBranch);
@@ -96,11 +100,12 @@ public class GatekeeperPlugin extends Builder {
             return false;
         }
 
+        /* Set the featureBranch we merged with in redis to other plugin know this was actually the build's branch */
         RedisProvider redisProvider = new RedisProvider();
         Jedis redis = redisProvider.getConnection();
         redis.set("old_" + build.getExternalizableId(), featureBranch);
 
-        // Add commit to list of things to push.
+        /* Add commit to list of things to push. */
         redis.rpush("topush_" + build.getExternalizableId(), targetBranch);
         redisProvider.returnConnection(redis);
         l.println("Pushed value to redis");

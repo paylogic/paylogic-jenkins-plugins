@@ -40,21 +40,6 @@ public class FogbugzNotifier extends Notifier {
         super();
     }
 
-    /*
-    private void initialize(String url, String token) {
-        if (url.endsWith("/"))
-            this.url = url;
-        else
-            this.url = url + "/";
-
-        this.token = token;
-    }
-
-    private void initialize() {
-        this.initialize(DESCRIPTOR.getUrl(), DESCRIPTOR.getToken());
-    }
-    */
-
 	public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
 	}
@@ -68,6 +53,7 @@ public class FogbugzNotifier extends Notifier {
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
         log.info("Now performing post-build action for Fogbugz reporting.");
 
+        /* Set up environment and resolve some varaibles */
         RedisProvider redisProvider = new RedisProvider();
         Jedis redis = redisProvider.getConnection();
 
@@ -75,10 +61,9 @@ public class FogbugzNotifier extends Notifier {
         try {
             envVars = build.getEnvironment(listener);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "ERRORRRRRRRRRRBBLBL", e);
+            log.log(Level.SEVERE, "Exception during retrieval of environment variables. Something is very wrong...", e);
         }
-
-        listener.getLogger().print("Build uuid: " + build.getExternalizableId());
+        listener.getLogger().print("Build uuid: " + build.getExternalizableId() + "\n");
 
         String givenNodeId = replaceMacro("$NODE_ID", envVars);
         String givenCaseId = replaceMacro("$CASE_ID", envVars);
@@ -91,10 +76,10 @@ public class FogbugzNotifier extends Notifier {
             log.log(Level.SEVERE, "AdvancedMercurialManager could not be instantiated.", e);
             return false;
         }
-
         String output = amm.getBranch();
         String branchAccordingToRedis = redis.get("old_" + build.getExternalizableId());
 
+        /* Get the name of the branch so we can figure out which case this build belongs to */
         if (output.matches(FEATURE_BRANCH_REGEX)) {
             log.info("Current branch is case branch, using that to find case in FB");
         } else if (!givenCaseId.isEmpty() && !givenCaseId.equals("0")) {
@@ -119,6 +104,7 @@ public class FogbugzNotifier extends Notifier {
         }
 
 
+        /* Retrieve case */
         FogbugzCaseManager caseManager = this.getFogbugzCaseManager();
         FogbugzCase fbCase = caseManager.getCaseById(usableCaseId);
         if (fbCase == null) {
@@ -126,14 +112,13 @@ public class FogbugzNotifier extends Notifier {
             return false;
         }
         fbCase.assignToOpener();
-        //fbCase.addTag("merged");
 
+
+        /* Fill template context with useful variables. */
         Map<String, String> templateContext = new HashMap();
         templateContext.put("url", build.getAbsoluteUrl());
         templateContext.put("buildNumber", Integer.toString(build.getNumber()));
         templateContext.put("buildResult", build.getResult().toString());
-
-        //templateContext.put("buildHealth", build.getTestResultAction().getBuildHealth().getDescription());
         try {
             templateContext.put("tests_failed", Integer.toString(build.getTestResultAction().getFailCount()));
             templateContext.put("tests_skipped", Integer.toString(build.getTestResultAction().getSkipCount()));
@@ -144,25 +129,30 @@ public class FogbugzNotifier extends Notifier {
             templateContext.put("tests_skipped", "unknown");
             templateContext.put("tests_total", "unknown");
         }
-
         String listOfBranchesMergedWith = "";
         for (String branchName: redis.lrange("topush_" + build.getExternalizableId(), 0, -1)) {
             listOfBranchesMergedWith += branchName + ", ";
         }
+        templateContext.put("mergedwith", listOfBranchesMergedWith);
 
+        /* Expire values in Redis, so they'll be removed */
         redis.expire("topush_" + build.getExternalizableId(), 3600);
         redis.expire("old_" + build.getExternalizableId(), 3600);
 
-        templateContext.put("mergedwith", listOfBranchesMergedWith);
 
-        // Fetch&render templates, then save the template output together with the case.
+        /* Fetch&render templates, then save the template output together with the case. */
         Template mustacheTemplate;
         if (build.getResult() == Result.SUCCESS) {
             mustacheTemplate = Mustache.compiler().compile(this.getDescriptor().getSuccessfulBuildTemplate());
+            fbCase.addTag("merged");
         } else {
             mustacheTemplate = Mustache.compiler().compile(this.getDescriptor().getFailedBuildTemplate());
         }
+        /* Save case, this propagates the changes made on the case object */
         caseManager.saveCase(fbCase, mustacheTemplate.execute(templateContext));
+
+        /* Return redis connection to pool */
+        redisProvider.returnConnection(redis);
 
         return true;
     }
@@ -176,6 +166,10 @@ public class FogbugzNotifier extends Notifier {
     }
 
 
+    /**
+     * Global settings for FogbugzPlugin.
+     * Suggestion: move this to it's own class to keep this file small.
+     */
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 

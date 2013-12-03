@@ -29,8 +29,6 @@ public class MercurialPusher extends Builder {
 
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        RedisProvider redisProvider = new RedisProvider();
-        Jedis redis = redisProvider.getConnection();
         AdvancedMercurialManager amm = null;
         try {
             amm = new AdvancedMercurialManager(build, launcher, listener);
@@ -50,20 +48,11 @@ public class MercurialPusher extends Builder {
 
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        /**
-         * Returns true if this task is applicable to the given project.
-         *
-         * @return true to allow user to configure this post-promotion task for the given project.
-         * @see hudson.model.AbstractProject.AbstractProjectDescriptor#isApplicable(hudson.model.Descriptor)
-         */
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
         }
 
-        /**
-         * Human readable name of this kind of configurable object.
-         */
         @Override
         public String getDisplayName() {
             return "Perform a Mercurial Push command.";

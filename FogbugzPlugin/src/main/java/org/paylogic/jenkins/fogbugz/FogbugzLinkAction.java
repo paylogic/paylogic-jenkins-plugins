@@ -4,6 +4,9 @@ import hudson.model.Action;
 import lombok.Getter;
 import lombok.extern.java.Log;
 
+/**
+ * Container object for FogbugzLink, is used by Jenkins to render the caseURL on build page.
+ */
 @Log
 public class FogbugzLinkAction implements Action {
     @Getter private int caseId;

@@ -14,21 +14,22 @@ import java.util.List;
 import java.util.logging.Level;
 
 
+/**
+ * FogbugzEventListener: a HTTP endpoint that triggers builds.
+ * Set the build to trigger in Jenkins' global settings page.
+ */
 @Log
 @Extension
 public class FogbugzEventListener implements UnprotectedRootAction {
 
-    @Override
     public String getIconFileName() {
         return null;
     }
 
-    @Override
     public String getDisplayName() {
         return "Fogbugz Event Listener";
     }
 
-    @Override
     public String getUrlName() {
         return "fbTrigger";
     }

@@ -6,6 +6,9 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import lombok.extern.java.Log;
 
+/**
+ * FogbugzLinkDescriptor: Jenkins entry point for the plugin that puts Fogbugz links on build pages.
+ */
 @Log
 @Extension
 public class FogbugzLinkDescriptor extends BuildStepDescriptor<Publisher> {

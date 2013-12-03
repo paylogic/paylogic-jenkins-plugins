@@ -2,6 +2,7 @@ package org.paylogic.jenkins.upmerge;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.Plugin;
+import hudson.Util;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -14,15 +15,19 @@ import lombok.extern.java.Log;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+import org.paylogic.fogbugz.FogbugzCase;
+import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
 import org.paylogic.jenkins.advancedmercurial.MercurialBranch;
 import org.paylogic.jenkins.advancedmercurial.exceptions.MercurialException;
+import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranch;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranchImpl;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranchInvalidException;
 import org.paylogic.redis.RedisProvider;
 import redis.clients.jedis.Jedis;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,43 +43,55 @@ public class UpmergeBuilder extends Builder {
     @Getter
     private final boolean run_always;
 
-    // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
     public UpmergeBuilder(boolean run_always) {
         this.run_always = run_always;
     }
 
+    /**
+     * Here we should do upmerging.
+     *
+     * So:
+     * - Fetch case info using branch name.
+     * - NOT !! Create 'ReleaseBranch' object from case info and a nextBranch object which is releasebranch.copy().next();
+     * - Create ReleaseBranch object from current branch, we may expect that the GatekeeperPlugin set the correct one.
+     * - Initiate UpMerge sequence....
+     *   - Try to pull new code from nextBranch.getNext();
+     *   - Try to merge this new code with releaseBranch();
+     *   - Commit this shiny new code.
+     *   - Set a flag somewhere, indicating that this upmerge has been done.
+     *   - Repeat UpMerge sequence for next releases until there are no moar releases.
+     * - In some post-build thingy, push these new branches if all went well.
+     * - We SHOULD not have to do any cleanup actions, because workspace is updated every build.
+     * - Rely on the FogbugzPlugin (dependency, see pom.xml) to do reporting of our upmerges.
+     * - Trigger new builds on all branches that have been merged.
+     */
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        // This is where you 'build' the project.
-        // Since this is a dummy, we just say 'hello world' and call that a build.
+        PrintStream l = listener.getLogger();
         if (build.getResult() != Result.SUCCESS && !this.run_always) {
-            log.info("Not running build due to failed tests.");
+            log.info("Not running build due to failed tests in previous steps.");
+            l.append("Not running build due to failed tests in previous steps.");
             return false;
         }
 
-        PrintStream l = listener.getLogger();
-
-        /* Wheird generics logic which does not work at all..................... TODO: Fix
-        // Get the ReleaseBranch implementation
-        Class<?> releaseBranchImpl = null;
-        for (ReleaseBranch r: ReleaseBranch.all()) {
-            // Loop trough the classes, assign one if found in list.
-            // If more than one exists, our supplied implementation has less priority.
-            if (releaseBranchImpl == null) {
-                releaseBranchImpl = r.getClass();
-                break;
-            }
+        /* Get case ID using build parameters */
+        int resolvedCaseId = 0;
+        try {
+            resolvedCaseId = Integer.parseInt(Util.replaceMacro("$CASE_ID", build.getEnvironment(listener)));
+        } catch (Exception e) {
+            l.append("Exception while trying to resolve CASE_ID");
+        }
+        if (resolvedCaseId == 0) {
+            l.append("Could not find related case, aborting...");
+            return false;
         }
 
-        if (releaseBranchImpl == null) {
-            log.info("NO RELAESE BRANCH IMPLEMENTATION FOUDN! DEFAULTING TO BUILTIN");
-            releaseBranchImpl = ReleaseBranchImpl.class;
-        }
+        /* Fetch case with the resolved case id */
+        FogbugzCaseManager fbManager = new FogbugzNotifier().getFogbugzCaseManager();
+        FogbugzCase fbCase = fbManager.getCaseById(resolvedCaseId);
 
-        // END Get the releasebranch implementation
-        */
-
+        /* Get branch name using AdvancedMercurialManager, which we'll need later on as well. */
         AdvancedMercurialManager amm = null;
         try {
              amm = new AdvancedMercurialManager(build, launcher, listener);
@@ -82,36 +99,15 @@ public class UpmergeBuilder extends Builder {
             log.log(Level.SEVERE, "AdvancedMercurialManager could not be instantiated.", e);
             return false;
         }
-        RedisProvider redisProvider = new RedisProvider();
-        Jedis redis = redisProvider.getConnection();
         String branchName = amm.getBranch();
-
         Map buildVariables = build.getBuildVariables();
 
-        /*
-         * Here we should do upmerging. Luckily, we can access the command line,
-         * and run stuff from there (on the agents even!). Better to use the mercurial plugin though.
-         * (edit: this seems to be not possible :| , so lets create our own one!).
-         *
-         * So:
-         * - Fetch case info using branch name.
-         * - NOT !! Create 'ReleaseBranch' object from case info and a nextBranch object which is releasebranch.copy().next();
-         * - Create ReleaseBranch object from current branch, we may expect that the GatekeeperPlugin set the correct one.
-         * - Initiate UpMerge sequence....
-         *   - Try to pull new code from nextBranch.getNext();
-         *   - Try to merge this new code with releaseBranch();
-         *   - Commit this shiny new code.
-         *   - Set a flag somewhere, indicating that this upmerge has been done.
-         *   - Repeat UpMerge sequence for next releases until there are no moar releases.
-         * - In some post-build thingy, push these new branches if all went well.
-         * - We SHOULD not have to do any cleanup actions, because workspace is updated every build.
-         * - Rely on the FogbugzPlugin (dependency, see pom.xml) to do reporting of our upmerges.
-         * - Trigger new builds on all branches that have been merged.
-         */
 
+        /* Get a ReleaseBranch compatible object to bump release branch versions with. */
+        /* TODO: resolve user ReleaseBranchImpl of choice here, learn Java Generics first ;) */
         ReleaseBranch releaseBranch = null;
         try {
-            releaseBranch = new ReleaseBranchImpl(branchName);
+            releaseBranch = new ReleaseBranchImpl(fbCase.getTargetBranch());
         } catch (Exception e) {
             log.log(Level.SEVERE, "ReleaseBranchInvalid?.", e);
             return false;
@@ -129,8 +125,16 @@ public class UpmergeBuilder extends Builder {
         }
         nextBranch.next();
 
+        /* Prepare points to push merge results to, so we can tell the dev what we upmerged */
         List<String> branchesToPush = new ArrayList<String>();
         branchesToPush.add(releaseBranch.getName());
+        RedisProvider redisProvider = new RedisProvider();
+        Jedis redis = redisProvider.getConnection();
+
+        /*
+         Do actual upmerging in this loop, until we can't upmerge no moar.
+         Will not attempt to Upmerge to branches that were not in the 'hg branches' output.
+        */
 
         int retries = 0;
         do {
@@ -174,23 +178,13 @@ public class UpmergeBuilder extends Builder {
     }
 
     /**
-     * Descriptor for {@link UpmergeBuilder}. Used as a singleton.
-     * The class is marked as public so that it can be accessed from views.
-     *
-     * <p>
-     * See <tt>src/main/resources/hudson/plugins/hello_world/UpmergeBuilder/*.jelly</tt>
-     * for the actual HTML fragment for the configuration screen.
+     * Descriptor for {@link UpmergeBuilder}. Used as a singleton. Stores global UpmergePlugin settings.
      */
-    @Extension // This indicates to Jenkins that this is an implementation of an extension point.
+    @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-        /**
-         * In order to load the persisted global configuration, you have to 
-         * call load() in the constructor.
-         */
         public DescriptorImpl() throws Exception {
             super();
-
             Plugin fbPlugin = Jenkins.getInstance().getPlugin("FogbugzPlugin");
             if (fbPlugin == null) {
                 throw new Exception("You need the 'FogbugzPlugin' installed in order to use 'UpmergePlugin'");
@@ -200,26 +194,19 @@ public class UpmergeBuilder extends Builder {
             if (hgPlugin == null) {
                 throw new Exception("You need the 'mercurial' plugin installed in order to use 'UpmergePlugin'");
             }
-
             load();
         }
 
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            // Indicates that this builder can be used with all kinds of project types 
             return true;
         }
 
-        /**
-         * This human readable name is used in the configuration screen.
-         */
         public String getDisplayName() {
             return "Perform Upmerging of release branches.";
         }
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-            // To persist global configuration information,
-            // set that to properties and call save().
             save();
             return super.configure(req,formData);
         }

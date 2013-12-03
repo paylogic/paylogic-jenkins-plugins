@@ -24,6 +24,13 @@ public class ExecutionHelper {
         this.l = listener.getLogger();
     }
 
+    /**
+     * Runs a given command inside the build enviroment.
+     * @param command A StringArray with the command and its parameters.
+     * @return A String with the output of the command.
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public String runCommand(String[] command) throws IOException, InterruptedException {
         OutputStream os = new ByteArrayOutputStream();
         Launcher.ProcStarter p = this.launcher.launch();
@@ -42,21 +49,39 @@ public class ExecutionHelper {
         return output;
     }
 
+    /**
+     * Runs the given command inside the build environment.
+     * @param command String with command in it. Will be splitted by space characters,
+     *                so use a String[] if your arguments contain spaces.
+     * @return String with output of build.
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public String runCommand(String command) throws IOException, InterruptedException {
         String[] splittedCommand = command.split(" ");
         return this.runCommand(splittedCommand);
     }
 
+    /**
+     * Runs the given command, and strips all whitespace from the output.
+     */
     public String runCommandClean(String[] command) throws IOException, InterruptedException {
         String output = this.runCommand(command);
         return this.clean(output);
     }
 
+    /**
+     * Runs the given command, and strips all whitespace from the output.
+     * String version, splits by space characters.
+     */
     public String runCommandClean(String command) throws IOException, InterruptedException {
         String output = this.runCommand(command);
         return this.clean(output);
     }
 
+    /**
+     * Helper function to clean output from commands.
+     */
     private String clean(String input) {
         return input.toString().replaceAll("\\s", "");
     }
