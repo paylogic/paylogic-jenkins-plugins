@@ -29,6 +29,7 @@ public class AdvancedMercurialManager {
     private ExecutionHelper executor;
     private BuildListener buildListener;
     private PrintStream l;
+    private static final String REPO_SUBDIR_MACRO = "$REPO_SUBDIR";
 
     public AdvancedMercurialManager(AbstractBuild build, Launcher launcher, BuildListener listener) throws Exception {
         this.hgExe = new MercurialSCM.DescriptorImpl().getHgExe();
@@ -37,11 +38,12 @@ public class AdvancedMercurialManager {
         this.buildListener = listener;
         this.l = listener.getLogger();
 
-        String givenRepoSubdir = Util.replaceMacro("$REPO_SUBDIR", build.getEnvVars());
-        if (givenRepoSubdir.equals("$REPO_SUBDIR")) {
-            // var has not changed
+        String givenRepoSubdir = Util.replaceMacro(REPO_SUBDIR_MACRO, build.getEnvVars());
+        if (givenRepoSubdir.startsWith("$") || givenRepoSubdir.isEmpty()) {
+            // Var has not changes, so it isn't set, so we don't need it.
             givenRepoSubdir = "";
         }
+
         this.executor = new ExecutionHelper(launcher, listener, this.build.getEnvVars(),
                 new FilePath(new File(this.build.getWorkspace() + givenRepoSubdir)));
     }
@@ -109,18 +111,18 @@ public class AdvancedMercurialManager {
      * @param revision : String with revision, hash of branchname to update to.
      */
     public void update(String revision) throws MercurialException {
-        String output = "";
+        CommandResult output = null;
         try {
             String[] command = {this.hgExe, "update", revision};
-            output = this.executor.runCommand(command).stdout;
+            output = this.executor.runCommand(command);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Exception occured during update of workspace.", e);
             l.append(e.toString());
         }
-        if (output.contains("abort: unknown revision")) {
-            throw new UnknownRevisionException(output);
-        } else if (output.contains("abort:")) {
-            throw new MercurialException(output);
+        if (output.getRelevantOutput().contains("abort: unknown revision")) {
+            throw new UnknownRevisionException(output.getRelevantOutput());
+        } else if (output.getRelevantOutput().contains("abort:")) {
+            throw new MercurialException(output.getRelevantOutput());
         }
     }
 
@@ -161,9 +163,9 @@ public class AdvancedMercurialManager {
             l.append(e.toString());
         }
 
-        if (output.stdout.contains("abort: merging") && output.stdout.contains("has no effect")) {
+        if (output.getRelevantOutput().contains("abort: merging") && output.getRelevantOutput().contains("has no effect")) {
             throw new MergeWontHaveEffectException(output.stdout);
-        } else if (output.stdout.contains("abort:")) {
+        } else if (output.getRelevantOutput().contains("abort:")) {
             throw new MercurialException(output.stdout);
         }
 

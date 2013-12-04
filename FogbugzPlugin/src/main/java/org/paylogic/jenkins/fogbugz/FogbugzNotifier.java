@@ -18,6 +18,7 @@ import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
 import org.paylogic.redis.RedisProvider;
 import redis.clients.jedis.Jedis;
 
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -52,6 +53,10 @@ public class FogbugzNotifier extends Notifier {
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
         log.info("Now performing post-build action for Fogbugz reporting.");
+        PrintStream l = listener.getLogger();
+        l.println("----------------------------------------------------------");
+        l.println("----------- Now sending build status to FogBugz ----------");
+        l.println("----------------------------------------------------------");
 
         /* Set up environment and resolve some varaibles */
         RedisProvider redisProvider = new RedisProvider();
@@ -63,10 +68,7 @@ public class FogbugzNotifier extends Notifier {
         } catch (Exception e) {
             log.log(Level.SEVERE, "Exception during retrieval of environment variables. Something is very wrong...", e);
         }
-        listener.getLogger().print("Build uuid: " + build.getExternalizableId() + "\n");
-
         String givenCaseId = replaceMacro("$CASE_ID", envVars);
-        log.info("Given case id = " + givenCaseId);
 
         AdvancedMercurialManager amm = null;
         try {
@@ -79,10 +81,10 @@ public class FogbugzNotifier extends Notifier {
         String branchAccordingToRedis = redis.get("old_" + build.getExternalizableId());
 
         /* Get the name of the branch so we can figure out which case this build belongs to */
-        if (output.matches(FEATURE_BRANCH_REGEX)) {
-            log.info("Current branch is case branch, using that to find case in FB");
-        } else if (!givenCaseId.isEmpty() && !givenCaseId.equals("0")) {
+        if (!givenCaseId.isEmpty() && !givenCaseId.equals("0")) {
             log.info("Using given case ID for reporting.");
+        } else if (output.matches(FEATURE_BRANCH_REGEX)) {
+            log.info("Current branch is case branch, using that to find case in FB");
         } else if (branchAccordingToRedis != null &&
                     !branchAccordingToRedis.isEmpty() &&
                     branchAccordingToRedis.matches(FEATURE_BRANCH_REGEX)) {
@@ -91,7 +93,7 @@ public class FogbugzNotifier extends Notifier {
         } else {
             log.info("No case branch found, currently not reporting to fogbugz.");
             return false;  // TODO: should we return true or false here?
-                           // TODO: and does that even impact build status?
+                           // TODO: and does that even impact build status since this is a Notifier?
         }
 
         int usableCaseId = 0;

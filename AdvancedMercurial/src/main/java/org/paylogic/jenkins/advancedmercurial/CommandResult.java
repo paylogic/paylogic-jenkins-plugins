@@ -24,4 +24,16 @@ public class CommandResult {
         this.stdout = stdout;
         this.stderr = stderr;
     }
+
+    /**
+     * Returns stdout as default, but returns stderr is stdout is empty.
+     * Helps you catch errors better, as they appear on both.
+     */
+    public String getRelevantOutput() {
+        if (this.stdout.isEmpty()) {
+            return this.stderr;
+        } else {
+            return this.stdout;
+        }
+    }
 }

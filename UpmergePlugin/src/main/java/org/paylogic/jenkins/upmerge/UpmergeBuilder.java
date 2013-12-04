@@ -20,6 +20,7 @@ import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.advancedmercurial.AdvancedMercurialManager;
 import org.paylogic.jenkins.advancedmercurial.MercurialBranch;
 import org.paylogic.jenkins.advancedmercurial.exceptions.MercurialException;
+import org.paylogic.jenkins.advancedmercurial.exceptions.UnknownRevisionException;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranch;
 import org.paylogic.jenkins.upmerge.releasebranch.ReleaseBranchImpl;
@@ -69,6 +70,21 @@ public class UpmergeBuilder extends Builder {
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
         PrintStream l = listener.getLogger();
+        l.println("----------------------------------------------------------");
+        l.println("--------------------- Now Upmerging ----------------------");
+        l.println("----------------------------------------------------------");
+        try {
+            return this.doPerform(build, launcher, listener);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Exception during Gatekeeepring.", e);
+            l.append("Exception occured, build aborting...");
+            l.append(e.toString());
+            return false;
+        }
+    }
+
+    private boolean doPerform(AbstractBuild build, Launcher launcher, BuildListener listener) throws Exception {
+        PrintStream l = listener.getLogger();
         if (build.getResult() != Result.SUCCESS && !this.run_always) {
             log.info("Not running build due to failed tests in previous steps.");
             l.append("Not running build due to failed tests in previous steps.");
@@ -76,52 +92,24 @@ public class UpmergeBuilder extends Builder {
         }
 
         /* Get case ID using build parameters */
-        int resolvedCaseId = 0;
-        try {
-            resolvedCaseId = Integer.parseInt(Util.replaceMacro("$CASE_ID", build.getEnvironment(listener)));
-        } catch (Exception e) {
-            l.append("Exception while trying to resolve CASE_ID");
-        }
-        if (resolvedCaseId == 0) {
-            l.append("Could not find related case, aborting...");
-            return false;
-        }
+        int resolvedCaseId = Integer.parseInt(Util.replaceMacro("$CASE_ID", build.getEnvironment(listener)));
 
         /* Fetch case with the resolved case id */
         FogbugzCaseManager fbManager = new FogbugzNotifier().getFogbugzCaseManager();
         FogbugzCase fbCase = fbManager.getCaseById(resolvedCaseId);
 
         /* Get branch name using AdvancedMercurialManager, which we'll need later on as well. */
-        AdvancedMercurialManager amm = null;
-        try {
-             amm = new AdvancedMercurialManager(build, launcher, listener);
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "AdvancedMercurialManager could not be instantiated.", e);
-            return false;
-        }
+        AdvancedMercurialManager amm = new AdvancedMercurialManager(build, launcher, listener);
         String branchName = amm.getBranch();
         Map buildVariables = build.getBuildVariables();
 
 
         /* Get a ReleaseBranch compatible object to bump release branch versions with. */
         /* TODO: resolve user ReleaseBranchImpl of choice here, learn Java Generics first ;) */
-        ReleaseBranch releaseBranch = null;
-        try {
-            releaseBranch = new ReleaseBranchImpl(fbCase.getTargetBranch());
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "ReleaseBranchInvalid?.", e);
-            return false;
-        }
-
+        ReleaseBranch releaseBranch = new ReleaseBranchImpl(fbCase.getTargetBranch());
         List<MercurialBranch> branchList = amm.getBranches();
 
-        ReleaseBranch nextBranch = null;
-        try {
-            nextBranch = releaseBranch.copy();
-        } catch (ReleaseBranchInvalidException e) {
-            log.info("NOW HOW DID THAT HAPPEN? (ReleaseBranchInvalidException)");
-            return false;
-        }
+        ReleaseBranch nextBranch = releaseBranch.copy();
         nextBranch.next();
 
         /* Prepare points to push merge results to, so we can tell the dev what we upmerged */
@@ -144,12 +132,11 @@ public class UpmergeBuilder extends Builder {
                     amm.commit("[Jenkins Upmerging] Merged " + nextBranch.getName() + " with " + releaseBranch.getName());
                     redis.rpush("topush_" + build.getExternalizableId(), nextBranch.getName());
                     branchesToPush.add(nextBranch.getName());
+                    retries = 0;
 
-                } catch (MercurialException e) {
-                    log.log(Level.SEVERE, "Exception during Mercurial operations", e);
+                } catch (UnknownRevisionException ure) {
+                    retries++;
                 }
-
-                retries = 0;
             } else {
                 retries++;
             }

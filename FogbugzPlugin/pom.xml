@@ -8,7 +8,7 @@
 
     <groupId>org.paylogic</groupId>
     <artifactId>FogbugzPlugin</artifactId>
-    <version>1.0.15</version>
+    <version>1.0.20</version>
     <packaging>hpi</packaging>
 
     <dependencies>
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>org.paylogic</groupId>
             <artifactId>AdvancedMercurial</artifactId>
-            <version>1.0.17</version>
+            <version>1.0.19</version>
         </dependency>
         <dependency>
             <groupId>org.paylogic</groupId>

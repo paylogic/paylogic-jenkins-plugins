@@ -9,6 +9,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.*;
 import java.util.Map;
+import java.util.logging.Level;
 
 @Log
 public class ExecutionHelper {
@@ -46,7 +47,8 @@ public class ExecutionHelper {
         try {
             returnCode = p.cmds(command).envs(this.envVars).pwd(this.workingDirectory).join();
         } catch (Exception e) {
-            log.info("Command terminated prematurely...");
+            log.log(Level.SEVERE, "Command terminated prematurely...", e);
+            l.append(e.toString() + " : " + e.getMessage());
         }
 
         /* Parse, log and return output */

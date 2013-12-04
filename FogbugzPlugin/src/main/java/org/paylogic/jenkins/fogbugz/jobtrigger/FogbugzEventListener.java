@@ -5,6 +5,7 @@ import hudson.model.*;
 import jenkins.model.Jenkins;
 import lombok.extern.java.Log;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 import org.paylogic.fogbugz.FogbugzCase;
 import org.paylogic.fogbugz.FogbugzCaseManager;
 import org.paylogic.jenkins.fogbugz.FogbugzNotifier;
@@ -51,11 +52,22 @@ public class FogbugzEventListener implements UnprotectedRootAction {
             return;
         }
 
-        List<ParameterValue> parameters = new ArrayList<ParameterValue>();
-        parameters.add(new StringParameterValue("CASE_ID", Integer.toString(fbCase.getId())));
-
         for (Project<?, ?> p: Jenkins.getInstance().getItems(Project.class)) {
             if (p.getName().equals(new FogbugzNotifier().getDescriptor().getJob_to_trigger())) {
+
+                // Fetch default Parameters
+                ParametersDefinitionProperty property = p.getProperty(ParametersDefinitionProperty.class);
+                final List<ParameterValue> parameters = new ArrayList<ParameterValue>();
+                for (final ParameterDefinition pd : property.getParameterDefinitions()) {
+                    final ParameterValue param = pd.getDefaultParameterValue();
+                    if (pd.getName().equals("CASE_ID")) {
+                        parameters.add(new StringParameterValue("CASE_ID", Integer.toString(fbCase.getId())));
+                    } else if (param != null) {
+                        parameters.add(param);
+                    }
+                }
+
+                // Here, we actually schedule the build.
                 p.scheduleBuild2(0, new FogbugzBuildCause(), new ParametersAction(parameters));
             }
         }
