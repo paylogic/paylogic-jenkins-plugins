@@ -21,24 +21,25 @@ How to get a build using all the plugins running
 ------------------------------------------------
 
 * Install all .hpi files by uploading them to the Jenkins plugin manager.
-  * Ensure you have installed the seperately provided Redis plugin.
-  * Also install the Mercurial and Multiple-SCMs plugins from the Jenkins marketplace.
+    * Ensure you have installed the seperately provided Redis plugin.
+    * Also install the Mercurial and Multiple-SCMs plugins from the Jenkins marketplace.
 * Go to Jenkins' global settings page and set:
-  * Your redis server
-  * Your fogbugz information (you need to get a api token manually)
-  * The case to build on a fogbugz trigger (listed under fogbugz settings)
+    * Your redis server
+    * Your fogbugz information (you need to get a api token manually)
+    * The case to build on a fogbugz trigger (listed under fogbugz settings)
 * Create or edit a build and set the following:
-  * Make your build parametrized, and include 'CASE_ID' (and optionally REPO_SUBDIR for MultiSCM) string parameters.
-  * (Optional) If you use Multi-SCM, make your repository to merge on have $REPO_SUBDIR as path to checkout in.
-  * (Optional) set a build name like this: 'Case ${ENV, var="CASE_ID"} - Branch ${ENV, var="NODE_ID"} || Build #${BUILD_NUMBER}'
-  * Ensure you have the following build steps in this order:
-      * Add the 'Perform Gatekeepering' step and check the checkbox
-      * Add your build and tests steps
-      * Add the 'Perform Upmerging of release branches' step
-      * Add the 'Perform a Mercurial Push command' step
-  * Under post-build actions add:
-      * Add the 'Add fogbugz link to case on build page' action
-      * Add the 'Report status to related fogbugz case' action
+    * Make your build parametrized, and include 'CASE_ID' (and optionally REPO_SUBDIR for MultiSCM) string parameters.
+    * (Optional) If you use Multi-SCM, make your repository to merge on have $REPO_SUBDIR as path to checkout in. 
+      Do not use '$REPO_SUBDIR' literally as the MultiSCM subfolder parameter. This will not work. Just make sure the two are the same.
+    * (Optional) set a build name like this: 'Case ${ENV, var="CASE_ID"} - Branch ${ENV, var="NODE_ID"} || Build #${BUILD_NUMBER}'
+    * Ensure you have the following build steps in this order:
+        * Add the 'Perform Gatekeepering' step and check the checkbox
+        * Add your build and tests steps
+        * Add the 'Perform Upmerging of release branches' step
+        * Add the 'Perform a Mercurial Push command' step
+    * Under post-build actions add:
+        * Add the 'Add fogbugz link to case on build page' action
+        * Add the 'Report status to related fogbugz case' action
 
 
 Contact

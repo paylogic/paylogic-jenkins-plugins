@@ -45,7 +45,7 @@ public class AdvancedMercurialManager {
         }
 
         this.executor = new ExecutionHelper(launcher, listener, this.build.getEnvVars(),
-                new FilePath(new File(this.build.getWorkspace() + givenRepoSubdir)));
+                new FilePath(new File(this.build.getWorkspace().toString(), givenRepoSubdir)));
     }
 
     /**

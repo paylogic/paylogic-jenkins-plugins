@@ -53,7 +53,7 @@ public class UpmergeBuilder extends Builder {
      * Here we should do upmerging.
      *
      * So:
-     * - Fetch case info using branch name.
+     * - Fetch case info using CASE_ID parameter (should be given).
      * - NOT !! Create 'ReleaseBranch' object from case info and a nextBranch object which is releasebranch.copy().next();
      * - Create ReleaseBranch object from current branch, we may expect that the GatekeeperPlugin set the correct one.
      * - Initiate UpMerge sequence....
