@@ -31,7 +31,7 @@ public class FogbugzCaseManager {
     private int mergekeeperUserId;
 
     /**
-     * Constructor of FogbugzCaseManager. Easiest is to call FogbugzNotifier.getFogbugzCaseManager()
+     * Constructor of FogbugzCaseManager.
      */
     public FogbugzCaseManager(String url, String token, String featureBranchFieldname,
                               String originalBranchFieldname, String targetBranchFieldname,
@@ -85,14 +85,13 @@ public class FogbugzCaseManager {
             params.put("cmd", "search");
             params.put("q", Integer.toString(id));
             params.put("cols", "ixBug,tags,fOpen,sTitle,ixPersonOpenedBy,ixPersonAssignedTo," +
-                                      this.getCustomFieldsCSV());
+                                      this.getCustomFieldsCSV());  // TODO: milestones.
 
             URL uri = new URL(this.mapToFogbugzUrl(params));
             HttpURLConnection con = (HttpURLConnection) uri.openConnection();
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(con.getInputStream());
-            // doc.getDocumentElement().normalize();  // For debugging? TODO: Check that.
 
             List<String> tags = new ArrayList();
             NodeList tagNodeList = doc.getElementsByTagName("tag");
@@ -123,6 +122,7 @@ public class FogbugzCaseManager {
 
     /**
      * Saves a case to fogbugz using its API.
+     * Supports creating new cases, by giving case 0 as caseId.
      * @param fbCase The case to save.
      * @param comment A message to pass for this edit.
      * @return boolean, true if all is well, else false.
@@ -130,8 +130,14 @@ public class FogbugzCaseManager {
     public boolean saveCase(FogbugzCase fbCase, String comment) {
         try {
             HashMap params = new HashMap();
-            params.put("cmd", "edit");
-            params.put("ixBug", Integer.toString(fbCase.getId()));
+            // If id = 0, create new case.
+            if (fbCase.getId() == 0) {
+                params.put("cmd", "new");
+                params.put("sTitle", fbCase.getTitle());
+            } else {
+                params.put("cmd", "edit");
+                params.put("ixBug", Integer.toString(fbCase.getId()));
+            }
             params.put("ixPersonAssignedTo", Integer.toString(fbCase.getAssignedTo()));
             params.put("ixPersonOpenedBy", Integer.toString(fbCase.getOpenedBy()));
             params.put("sTags", fbCase.tagsToCSV());
@@ -144,10 +150,12 @@ public class FogbugzCaseManager {
             HttpURLConnection con = (HttpURLConnection) uri.openConnection();
             String result = con.getInputStream().toString();
             FogbugzCaseManager.log.info("Fogbugz response got when saving case: " + result);
+            // If we got this far, all is probably well.
+            // TODO: parse XML that gets returned to check status furreal.
             return true;
 
         } catch (Exception e) {
-            FogbugzCaseManager.log.log(Level.SEVERE, "Exception while saving case " + Integer.toString(fbCase.getId()), e);
+            FogbugzCaseManager.log.log(Level.SEVERE, "Exception while creating/saving case " + Integer.toString(fbCase.getId()), e);
         }
         return false;
     }

@@ -123,6 +123,8 @@ public class UpmergeBuilder extends Builder {
          Will not attempt to Upmerge to branches that were not in the 'hg branches' output.
         */
 
+        // Pull to also get new releases created during tests.
+        amm.pull();
         int retries = 0;
         do {
             if (this.isInBranchList(releaseBranch.getName(), branchList)) {

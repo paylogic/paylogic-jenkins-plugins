@@ -40,7 +40,7 @@ public class AdvancedMercurialManager {
 
         String givenRepoSubdir = Util.replaceMacro(REPO_SUBDIR_MACRO, build.getEnvVars());
         if (givenRepoSubdir.startsWith("$") || givenRepoSubdir.isEmpty()) {
-            // Var has not changes, so it isn't set, so we don't need it.
+            // Var has not changed, so it isn't set, so we don't need it.
             givenRepoSubdir = "";
         }
 

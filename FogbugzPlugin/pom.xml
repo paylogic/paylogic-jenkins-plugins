@@ -8,7 +8,7 @@
 
     <groupId>org.paylogic</groupId>
     <artifactId>FogbugzPlugin</artifactId>
-    <version>1.0.21</version>
+    <version>1.0.23</version>
     <packaging>hpi</packaging>
 
     <dependencies>
@@ -20,7 +20,7 @@
         <dependency>
             <groupId>org.paylogic</groupId>
             <artifactId>Fogbugz</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
