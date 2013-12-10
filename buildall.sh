@@ -6,12 +6,10 @@ set -e
 
 export MAVEN_OPTS="-Dmaven.test.skip=true"
 
-cd ~/jenkins-redis/
+cd Redis
 mvn clean:clean
 mvn deploy
-cd ~/jenkinsplugins
-
-cd Fogbugz
+cd ../Fogbugz
 mvn clean:clean
 mvn deploy
 cd ../AdvancedMercurial/
