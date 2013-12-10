@@ -1,0 +1,18 @@
+[submodule "Redis"]
+	path = Redis
+	url = git@github.com:paylogic/jenkins-redis-plugin
+[submodule "Fogbugz"]
+	path = Fogbugz
+	url = git@github.com:paylogic/java-fogbugz
+[submodule "FogbugzPlugin"]
+	path = FogbugzPlugin
+	url = git@github.com:paylogic/jenkins-fogbugz-plugin
+[submodule "AdvancedMercurial"]
+	path = AdvancedMercurial
+	url = git@github.com:paylogic/jenkins-advancedmercurial-plugin
+[submodule "GatekeeperPlugin"]
+	path = GatekeeperPlugin
+	url = git@github.com:paylogic/jenkins-gatekeeper-plugin
+[submodule "UpmergePlugin"]
+	path = UpmergePlugin
+	url = git@github.com:paylogic/jenkins-upmerge-plugin
