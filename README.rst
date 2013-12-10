@@ -4,9 +4,12 @@ paylogic-jenkins-plugins
 Some Jenkins plugins we developed at Paylogic.
 These are currently still in development, so no guarantees there.
 
+Note: the folders here are all submodules, as we've moved every plugin to it's own repo.
+
 
 Plugins do the following:
 
+- RedisPlugin: a Jenkins plugin that provides Redis connections for use by other plugins.
 - Fogbugz: a Java interface to the Fogbugz 7 XML API.
 - FogbugzPlugin: a Jenkins plugin that reports build status to Fogbugz using 'Fogbugz'
 - AdvancedMercurialManager: a Java class that executes update, commit and merge commands for Mercurial. Parses output of that as well.
@@ -14,7 +17,6 @@ Plugins do the following:
 - GatekeeperPlugin: a Jenkins plugin that merges a feature branch to a release branch (meant to run before tests).
 - UpmergePlugin: a Jenkins plugin that merges current release branch to next release branch until there are no further releases available.
 
-Plugins depend on the `Jenkins Redis plugin`, which is in its own repository.
 
 
 How to get a build using all the plugins running
