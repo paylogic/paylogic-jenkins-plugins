@@ -6,7 +6,6 @@ These are currently still in development, so no guarantees there.
 
 Note: the folders here are all submodules, as we've moved every plugin to it's own repo.
 
-
 Plugins do the following:
 
 - RedisPlugin: a Jenkins plugin that provides Redis connections for use by other plugins.
@@ -17,6 +16,21 @@ Plugins do the following:
 - GatekeeperPlugin: a Jenkins plugin that merges a feature branch to a release branch (meant to run before tests).
 - UpmergePlugin: a Jenkins plugin that merges current release branch to next release branch until there are no further releases available.
 
+
+Development environment
+-----------------------
+
+.. code-block:: shell
+
+    # update all git submodules
+    ./updateall.sh
+
+    # build all sources
+    ./buildall.sh
+
+    # run instance with given plugin in dev mode
+    cd GatekeeperPlugin
+    MAVEN_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n" mvn hpi:run
 
 
 How to get a build using all the plugins running
@@ -31,7 +45,7 @@ How to get a build using all the plugins running
     * The case to build on a fogbugz trigger (listed under fogbugz settings)
 * Create or edit a build and set the following:
     * Make your build parametrized, and include 'CASE_ID' (and optionally REPO_SUBDIR for MultiSCM) string parameters.
-    * (Optional) If you use Multi-SCM, make your repository to merge on have $REPO_SUBDIR as path to checkout in. 
+    * (Optional) If you use Multi-SCM, make your repository to merge on have $REPO_SUBDIR as path to checkout in.
       Do not use '$REPO_SUBDIR' literally as the MultiSCM subfolder parameter. This will not work. Just make sure the two are the same.
     * (Optional) set a build name like this: 'Case ${ENV, var="CASE_ID"} - Branch ${ENV, var="NODE_ID"} || Build #${BUILD_NUMBER}'
     * Ensure you have the following build steps in this order:
@@ -50,7 +64,7 @@ Contact
 
 If you have questions, bug reports, suggestions, etc. please create an issue on
 the `GitHub project page`_. The latest version of ``Paylogic Jenkins Plugins`` will always be
-available on GitHub. 
+available on GitHub.
 
 
 License

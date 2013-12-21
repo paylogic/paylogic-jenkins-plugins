@@ -10,6 +10,6 @@ for i in Redis Fogbugz AdvancedMercurial FogbugzPlugin GatekeeperPlugin UpmergeP
 do
     pushd $i
         mvn clean:clean
-        mvn deploy
+        mvn install
     popd
 done
