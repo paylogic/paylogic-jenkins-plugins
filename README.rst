@@ -35,8 +35,9 @@ How to get a build using all the plugins running
       Do not use '$REPO_SUBDIR' literally as the MultiSCM subfolder parameter. This will not work. Just make sure the two are the same.
     * (Optional) set a build name like this: 'Case ${ENV, var="CASE_ID"} - Branch ${ENV, var="NODE_ID"} || Build #${BUILD_NUMBER}'
     * Ensure you have the following build steps in this order:
-        * Add the 'Perform Gatekeepering' step and check the checkbox
+        * Add the 'Perform Gatekeeper merge' step and check the checkbox
         * Add your build and tests steps
+        * Add the 'Perform Gatekeeper commit' step and check the checkbox
         * Add the 'Perform Upmerging of release branches' step
         * Add the 'Perform a Mercurial Push command' step
     * Under post-build actions add:
