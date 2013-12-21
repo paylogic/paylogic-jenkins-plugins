@@ -33,11 +33,19 @@ Development environment
     MAVEN_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n" mvn hpi:run
 
 
+Deployment to jenkins instance
+------------------------------
+
+.. code-block:: shell
+
+    # upload all plugins to your jenkins instance
+    ./uploadall.sh http://jenkins.example.com
+    
+
 How to get a build using all the plugins running
 ------------------------------------------------
 
-* Install all .hpi files by uploading them to the Jenkins plugin manager.
-    * Ensure you have installed the seperately provided Redis plugin.
+* Install all .hpi files by uploading them to the Jenkins plugin manager (or use uploadall.sh script).
     * Also install the Mercurial and Multiple-SCMs plugins from the Jenkins marketplace.
 * Go to Jenkins' global settings page and set:
     * Your redis server
@@ -45,6 +53,13 @@ How to get a build using all the plugins running
     * The case to build on a fogbugz trigger (listed under fogbugz settings)
 * Create or edit a build and set the following:
     * Make your build parametrized, and include 'CASE_ID' (and optionally REPO_SUBDIR for MultiSCM) string parameters.
+    * (Optional) If you don't need to defer branch info from fogbugs, have those parameters on your job:
+        * TARGET_BRANCH
+            branch we will merge into, aka mainline or release branch
+        * FEATURE_BRANCH
+            branch which will be merged into mainline, aka feature branch
+        * REPO_PATH
+            repository path to be added to 'base' repo url (empty by default)
     * (Optional) If you use Multi-SCM, make your repository to merge on have $REPO_SUBDIR as path to checkout in.
       Do not use '$REPO_SUBDIR' literally as the MultiSCM subfolder parameter. This will not work. Just make sure the two are the same.
     * (Optional) set a build name like this: 'Case ${ENV, var="CASE_ID"} - Branch ${ENV, var="NODE_ID"} || Build #${BUILD_NUMBER}'
