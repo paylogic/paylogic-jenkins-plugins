@@ -13,7 +13,8 @@ To set up your Fogbugz urltrigger so Jenkins will build a featureBranch when the
 - Add a new trigger to the following specifications:
   - React on event type `CaseAssigned` only, as this hook will trigger a build.
   - `URL` is `<url_to_jenkins>/fbTrigger/?caseid={CaseNumber}`.
-  - Set `filter` to `AssignedToName = "Paylogic Mergekeepers"`.
+  - Set `filter` to `AssignedToName = "Paylogic Mergekeepers"`. 
+    We use 'Paylogic Mergekeepers' here, but you should obviously choose your own user.
   - Set a name if you want to, it's not required.
   - Click `OK` to save the trigger.
 - Profit!

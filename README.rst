@@ -8,13 +8,12 @@ Note: the folders here are all submodules, as we've moved every plugin to it's o
 
 Plugins do the following:
 
-- RedisPlugin: a Jenkins plugin that provides Redis connections for use by other plugins.
 - Fogbugz: a Java interface to the Fogbugz 7 XML API.
 - FogbugzPlugin: a Jenkins plugin that reports build status to Fogbugz using 'Fogbugz'
 - AdvancedMercurialManager: a Java class that executes update, commit and merge commands for Mercurial. Parses output of that as well.
-  Also provides a task that pushes branches put in Redis by Gatekeeper/Upmerge plugins.
 - GatekeeperPlugin: a Jenkins plugin that merges a feature branch to a release branch (meant to run before tests).
 - UpmergePlugin: a Jenkins plugin that merges current release branch to next release branch until there are no further releases available.
+  This also pushes the upmerged content, including Gatekeeper merge if present.
 
 
 Development environment
@@ -48,7 +47,6 @@ How to get a build using all the plugins running
 * Install all .hpi files by uploading them to the Jenkins plugin manager (or use uploadall.sh script).
     * Also install the Mercurial and Multiple-SCMs plugins from the Jenkins marketplace.
 * Go to Jenkins' global settings page and set:
-    * Your redis server
     * Your fogbugz information (you need to get a api token manually)
     * The case to build on a fogbugz trigger (listed under fogbugz settings)
 * Create or edit a build and set the following:
@@ -95,4 +93,3 @@ This software is licensed under the `MIT license`_
 .. _Paylogic: http://www.paylogic.com/
 .. _GitHub project page: https://github.com/paylogic/paylogic-jenkins-plugins
 .. _Maikel Wever: https://github.com/maikelwever/
-.. _Jenkins Redis plugin: https://github.com/paylogic/jenkins-redis-plugin/
