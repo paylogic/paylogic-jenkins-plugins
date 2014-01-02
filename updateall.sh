@@ -1,5 +1,8 @@
 #!/bin/bash
 
+git submodule init
+git submodule update
+
 for i in */src
 do
     pushd $i
