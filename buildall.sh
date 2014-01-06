@@ -6,7 +6,7 @@ set -e
 
 export MAVEN_OPTS="-Dmaven.test.skip=true"
 
-for i in Fogbugz AdvancedMercurial FogbugzPlugin GatekeeperPlugin UpmergePlugin
+for i in mercurial-plugin Fogbugz AdvancedMercurial FogbugzPlugin GatekeeperPlugin UpmergePlugin
 do
     pushd $i
         mvn clean:clean
