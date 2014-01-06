@@ -16,3 +16,6 @@
 [submodule "UpmergePlugin"]
 	path = UpmergePlugin
 	url = git@github.com:paylogic/jenkins-upmerge-plugin
+[submodule "mercurial-plugin"]
+	path = mercurial-plugin
+	url = git@github.com:paylogic/mercurial-plugin.git
