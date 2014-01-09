@@ -4,9 +4,6 @@
 [submodule "Fogbugz"]
 	path = Fogbugz
 	url = git@github.com:paylogic/java-fogbugz
-[submodule "FogbugzPlugin"]
-	path = FogbugzPlugin
-	url = git@github.com:paylogic/jenkins-fogbugz-plugin
 [submodule "GatekeeperPlugin"]
 	path = GatekeeperPlugin
 	url = git@github.com:paylogic/jenkins-gatekeeper-plugin
