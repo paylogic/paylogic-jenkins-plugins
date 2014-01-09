@@ -7,7 +7,8 @@ for i in */src
 do
     pushd $i
     cd ..
-        git checkout master
-        git pull origin master
+        BRANCH_NAME=`git rev-parse --abbrev-ref HEAD` 
+        git checkout $BRANCH_NAME
+        git pull origin $BRANCH_NAME
     popd
 done
