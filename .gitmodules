@@ -1,6 +1,3 @@
-[submodule "Redis"]
-	path = Redis
-	url = git@github.com:paylogic/jenkins-redis-plugin
 [submodule "Fogbugz"]
 	path = Fogbugz
 	url = git@github.com:paylogic/java-fogbugz
