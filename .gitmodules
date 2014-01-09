@@ -13,3 +13,6 @@
 [submodule "mercurial-plugin"]
 	path = mercurial-plugin
 	url = git@github.com:paylogic/mercurial-plugin.git
+[submodule "fogbugz-plugin"]
+	path = fogbugz-plugin
+	url = git@github.com:paylogic/fogbugz-plugin
