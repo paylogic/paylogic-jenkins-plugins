@@ -7,9 +7,6 @@
 [submodule "FogbugzPlugin"]
 	path = FogbugzPlugin
 	url = git@github.com:paylogic/jenkins-fogbugz-plugin
-[submodule "AdvancedMercurial"]
-	path = AdvancedMercurial
-	url = git@github.com:paylogic/jenkins-advancedmercurial-plugin
 [submodule "GatekeeperPlugin"]
 	path = GatekeeperPlugin
 	url = git@github.com:paylogic/jenkins-gatekeeper-plugin
