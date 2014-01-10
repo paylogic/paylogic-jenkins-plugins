@@ -4,9 +4,6 @@
 [submodule "GatekeeperPlugin"]
 	path = GatekeeperPlugin
 	url = git@github.com:paylogic/jenkins-gatekeeper-plugin
-[submodule "UpmergePlugin"]
-	path = UpmergePlugin
-	url = git@github.com:paylogic/jenkins-upmerge-plugin
 [submodule "fogbugz-plugin"]
 	path = fogbugz-plugin
 	url = git@github.com:paylogic/fogbugz-plugin
