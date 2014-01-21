@@ -10,9 +10,8 @@ Plugins do the following:
 
 - Fogbugz: a Java interface to the Fogbugz 7 XML API.
 - FogbugzPlugin: a Jenkins plugin that reports build status to Fogbugz using 'Fogbugz'
-- AdvancedMercurialManager: a Java class that executes update, commit and merge commands for Mercurial. Parses output of that as well.
 - GatekeeperPlugin: a Jenkins plugin that merges a feature branch to a release branch (meant to run before tests).
-- UpmergePlugin: a Jenkins plugin that merges current release branch to next release branch until there are no further releases available.
+  Also merges current release branch to next release branch until there are no further releases available.
   This also pushes the upmerged content, including Gatekeeper merge if present.
 
 
@@ -39,6 +38,26 @@ Deployment to jenkins instance
 
     # upload all plugins to your jenkins instance
     ./uploadall.sh http://jenkins.example.com
+
+
+
+Deployment to jenkins-ci.org
+----------------------------
+
+Follow the guide at: https://wiki.jenkins-ci.org/display/JENKINS/Hosting+Plugins
+In short: configure maven for your user and password, make sure the version has SNAPSHOT suffix and:
+
+.. code-block:: shell
+    
+    mvn release:clean release:prepare release:perform
+
+
+
+Deployment to Maven Central (for java-fogbugz)
+----------------------------------------------
+
+See: https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide
+Our namespace (org.paylogic) already has sync enabled from sonatype to central.
     
 
 How to get a build using all the plugins running
