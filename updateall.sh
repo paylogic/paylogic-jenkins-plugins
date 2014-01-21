@@ -2,6 +2,7 @@
 
 git pull
 git submodule init
+git submodule sync
 git submodule update
 
 for i in */src
