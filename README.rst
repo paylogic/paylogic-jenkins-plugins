@@ -2,7 +2,7 @@ paylogic-jenkins-plugins
 ========================
 
 This package contains a set of plugins to help you to integrate Fogbugz with Jenkins.
-These are currently still in development, maintained by Paylogic, so it is not guaranteed that they are bug free.
+These are currently still in development, maintained by Paylogic, and it is not guaranteed that they are bug free.
 
 These plugins perform the following tasks:
 
