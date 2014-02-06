@@ -1,12 +1,10 @@
 paylogic-jenkins-plugins
 ========================
 
-Some Jenkins plugins we developed at Paylogic.
-These are currently still in development, so no guarantees there.
+This package contains a set of plugins to help you to integrate Fogbugz with Jenkins.
+These are currently still in development, maintained by Paylogic, so it is not guaranteed that they are bug free.
 
-Note: the folders here are all submodules, as we've moved every plugin to it's own repo.
-
-Plugins do the following:
+These plugins perform the following tasks:
 
 - Fogbugz: a Java interface to the Fogbugz 7 XML API.
 - FogbugzPlugin: a Jenkins plugin that reports build status to Fogbugz using 'Fogbugz'
@@ -15,13 +13,27 @@ Plugins do the following:
   This also pushes the upmerged content, including Gatekeeper merge if present.
 
 
+Note: The folders in this package are different plugins belonging to their own repository.
+
+
 Development environment
 -----------------------
+
+To start to set up the development environment, please run the following command:
 
 .. code-block:: shell
 
     # update all git submodules
     ./updateall.sh
+
+
+At this point, you can copy the content of the settings.xml file to your own settings.xml file.
+If it does not exist, create a file named 'settings.xml' under ~/.m2/. This is necessary because it contains
+the URL to Jenkins repository.
+
+After you have updated your settings, you can run the command to build the plugins.
+
+.. code-block:: shell
 
     # build all sources
     ./buildall.sh
@@ -48,7 +60,7 @@ Follow the guide at: https://wiki.jenkins-ci.org/display/JENKINS/Hosting+Plugins
 In short: configure maven for your user and password, make sure the version has SNAPSHOT suffix and:
 
 .. code-block:: shell
-    
+
     mvn release:clean release:prepare release:perform
 
 
@@ -58,7 +70,7 @@ Deployment to Maven Central (for java-fogbugz)
 
 See: https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide
 Our namespace (org.paylogic) already has sync enabled from sonatype to central.
-    
+
 
 How to get a build using all the plugins running
 ------------------------------------------------
