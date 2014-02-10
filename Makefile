@@ -2,6 +2,7 @@ SHELL := /bin/bash
 PATH := $(PWD)/env/bin:$(PATH)
 BRANCH_NAME := master
 MAVEN_OPTS := -Dmaven.test.skip=true
+MODULES := Fogbugz fogbugz-plugin GatekeeperPlugin ssh-slaves-plugin
 
 upload:
 	test -v URL || (echo 'Usage: make upload URL=something. ' && exit 1 )
@@ -12,11 +13,10 @@ pull:
 	git submodule init
 	git submodule sync
 	git submodule update
+	$(foreach module, $(MODULES), (pushd $(module) && git checkout $(BRANCH_NAME) && git pull origin $(BRANCH_NAME);)
 
-	pushd Fogbugz && git checkout $(BRANCH_NAME) && git pull origin $(BRANCH_NAME)
-	pushd fogbugz-plugin && git checkout $(BRANCH_NAME) && git pull origin $(BRANCH_NAME)
-	pushd GatekeeperPlugin && git checkout $(BRANCH_NAME) && git pull origin $(BRANCH_NAME)
+build:
+	$(foreach module, $(MODULES), (pushd $(module) && mvn clean:clean && mvn install);)
 
-buildall:
-	echo $(MAVEN_OPTS)
-	$(foreach hpi_file, Fogbugz fogbugz-plugin GatekeeperPlugin, (pushd $(hpi_file) && mvn clean:clean && mvn install);)
+test:
+	$(foreach module, $(MODULES), (pushd $(module) && mvn clean:clean && mvn test && mvn install);)
