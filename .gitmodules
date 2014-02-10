@@ -7,3 +7,6 @@
 [submodule "GatekeeperPlugin"]
 	path = GatekeeperPlugin
 	url = git@github.com:jenkinsci/gatekeeper-plugin.git
+[submodule "ssh-slaves-plugin"]
+	path = ssh-slaves-plugin
+	url = git@github.com:paylogic/ssh-slaves-plugin.git
