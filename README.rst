@@ -21,7 +21,7 @@ Development environment
 
 To start to set up the development environment, please copy the content of the settings.xml file to your own settings.xml file.
 If it does not exist, create a file named 'settings.xml' under ~/.m2/. This is necessary because it contains
-the URL to Jenkins repository. Then, you can use the 'make' tool to get an up-to-date revision:
+the URL to Jenkins repository. Then, you can use the `make` tool to get an up-to-date revision:
 
 .. code-block:: shell
 
