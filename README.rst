@@ -19,38 +19,37 @@ Note: The folders in this package are different plugins belonging to their own r
 Development environment
 -----------------------
 
-To start to set up the development environment, please run the following command:
-
-.. code-block:: shell
-
-    # update all git submodules
-    ./updateall.sh
-
-
-At this point, you can copy the content of the settings.xml file to your own settings.xml file.
+To start to set up the development environment, please copy the content of the settings.xml file to your own settings.xml file.
 If it does not exist, create a file named 'settings.xml' under ~/.m2/. This is necessary because it contains
-the URL to Jenkins repository.
-
-After you have updated your settings, you can run the command to build the plugins.
+the URL to Jenkins repository. Then, you can use the 'make' tool to get an up-to-date revision:
 
 .. code-block:: shell
 
-    # build all sources
-    ./buildall.sh
+    make pull
 
-    # run instance with given plugin in dev mode
-    cd GatekeeperPlugin
-    MAVEN_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n" mvn hpi:run
+If you want to run tests:
+
+.. code-block:: shell
+
+    make test
+
+And, if you want to build the plugins:
+
+.. code-block:: shell
+
+    make build
 
 
 Deployment to jenkins instance
 ------------------------------
 
+Once you have updated a plugin, you can update it to Jenkins. In order to do it, use the following command:
+
 .. code-block:: shell
 
-    # upload all plugins to your jenkins instance
-    ./uploadall.sh http://jenkins.example.com
+    make upload URL=http://jenkins.example.com
 
+Please note that you need to specify the URL of the Jenkins instance.
 
 
 Deployment to jenkins-ci.org
