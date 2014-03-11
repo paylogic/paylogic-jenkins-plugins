@@ -16,7 +16,7 @@ pull:
 	$(foreach module, $(MODULES), (pushd $(module) && git checkout $(BRANCH_NAME) && git pull origin $(BRANCH_NAME));)
 
 build:
-	$(foreach module, $(MODULES), (pushd $(module) && mvn clean:clean && mvn install);)
+	$(foreach module, $(MODULES), (export MAVEN_OPTS=$(MAVEN_OPTS) && pushd $(module) && mvn clean:clean && mvn install);)
 
 test:
 	$(foreach module, $(MODULES), (pushd $(module) && mvn clean:clean && mvn test && mvn install);)
