@@ -13,7 +13,7 @@ pull:
 	git submodule init
 	git submodule sync
 	git submodule update
-	$(foreach module, $(MODULES), (pushd $(module) && git checkout $(BRANCH_NAME) && git pull origin $(BRANCH_NAME);)
+	$(foreach module, $(MODULES), (pushd $(module) && git checkout $(BRANCH_NAME) && git pull origin $(BRANCH_NAME));)
 
 build:
 	$(foreach module, $(MODULES), (pushd $(module) && mvn clean:clean && mvn install);)
