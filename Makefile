@@ -6,7 +6,7 @@ MODULES := Fogbugz fogbugz-plugin GatekeeperPlugin ssh-slaves-plugin
 
 upload:
 	test -v URL || (echo 'Usage: make upload URL=something. ' && exit 1 )
-	$(foreach hpi_file, $(wildcard */target/*.hpi), curl -i -F name=$(hpi_file) $(URL)/pluginManager/uploadPlugin)
+	$(foreach hpi_file, $(wildcard */target/*.hpi), curl -i -F name=@$(hpi_file) $(URL)/pluginManager/uploadPlugin)
 
 pull:
 	-git pull
