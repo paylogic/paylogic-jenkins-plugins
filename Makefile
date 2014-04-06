@@ -5,8 +5,9 @@ MAVEN_OPTS := -Dmaven.test.skip=true
 MODULES := Fogbugz fogbugz-plugin GatekeeperPlugin ssh-slaves-plugin
 
 upload:
-	test -v URL || (echo 'Usage: make upload URL=something. ' && exit 1 )
-	$(foreach hpi_file, $(wildcard */target/*.hpi), curl -i -F name=@$(hpi_file) $(URL)/pluginManager/uploadPlugin)
+	$(if $(URL),,echo 'Usage: make upload URL=<my-jenkins-url> [PACKAGE=<mypackage>].'; exit 1)
+	$(foreach hpi_file,$(if $(PACKAGE),$(wildcard $(PACKAGE)/target/*.hpi),$(wildcard */target/*.hpi)), curl -i -F name=@$(hpi_file) $(URL)/pluginManager/uploadPlugin)
+	curl -i -F Submit=Yes $(URL)/safeRestart
 
 pull:
 	-git pull
