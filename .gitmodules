@@ -10,3 +10,6 @@
 [submodule "ssh-slaves-plugin"]
 	path = ssh-slaves-plugin
 	url = git@github.com:paylogic/ssh-slaves-plugin.git
+[submodule "cucumber-testresult-plugin"]
+	path = cucumber-testresult-plugin
+	url = git@github.com:paylogic/cucumber-testresult-plugin.git
